@@ -1,0 +1,20 @@
+Canvas, RichLog {
+    border: round grey;
+    margin: 1 2;
+    overflow-x: hidden;
+}
+
+RichLog {
+    width: 30%;
+    max-width: 50;
+}
+
+.hidden {
+    display: none;
+}
+
+Screen, #container {
+    layout: horizontal;
+    align: center middle;
+}
+
