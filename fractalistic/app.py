@@ -1,20 +1,22 @@
 ##### Textual imports
 from textual.app import App
-from textual_canvas import Canvas
-from textual.widgets import Footer, ProgressBar, RichLog, Static
+from textual.widgets import Footer, ProgressBar, RichLog, Static, Input
 from textual.binding import Binding
-from textual.events import Click
+from textual.events import Click, Key
 from textual import log
 from textual.color import Color
+from textual import on
 ###### Fractals
 import fractals
 ###### Other imports
 from utils import *
 import colors
 import os
+from fractal_canv import FractalCanv
 from PIL import Image
 import asyncio
-from typing import Any
+from typing import Any, Callable
+from command import Command
 from rich.rule import Rule
 from time import monotonic, sleep, time
 from query_config import QueryConfig
@@ -65,18 +67,59 @@ class FractalisticApp(App):
     julia_click: mpc = mpc(1, 0)
     """The complex number corresponding to the Julia set to show when a point is clicked on the canvas"""
 
+    print_log_bar: bool = False
+    """If we should print a log bar before showing the message in the log panel"""
+
+    command_list: dict[str, Callable]
+    """List of commands"""
+
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
-    """Container for the log panel and for the canvas"""
+    """Container for the canvas and the right container"""
+
+    right_container: Static = Static(id="right_container")
+    """Container for the log panel and the command input"""
 
     progress_bar: ProgressBar = ProgressBar(classes="hidden")
     """Progress bar used when taking screenshots"""
 
-    canv: Canvas = Canvas(0, 0)
+    canv: FractalCanv = FractalCanv(0, 0)
     """The canvas widget"""
 
     rich_log: RichLog = RichLog(markup=True, auto_scroll=True, wrap=True, min_width=5)
     """The log panel widget"""
+
+    command_input: Input = Input(placeholder="help")
+    """Command input"""
+
+    ####### COMMANDS ###########
+    def command_help(self, args):
+        command_desc = [f"- [blue]{name}[/blue]: {self.command_list[name].help}" for name in self.command_list]
+        self.log_write([
+            f"[on blue]Available commands",
+            *command_desc
+        ])
+
+    def command_clear(self, args):
+        self.rich_log.clear()
+        self.print_log_bar = False
+
+    def command_quit(self, args):
+        self.log_write("Quitting...")
+        self.exit()
+
+    def command_version(self, args):
+        self.log_write(f"Fractalistic version: [on blue]{VERSION}")
+
+    # Cannot set command_list directly because for some obscure
+    # reason the quit command doesn't work if you do so
+    def set_command_list(self):
+        self.command_list = {
+            "version": Command(self.command_version, "Show the version number"),
+            "clear": Command(self.command_clear, "Clear the log panel"),
+            "quit": Command(self.command_quit, "Exit the app"),
+            "help": Command(self.command_help, "Show this message")
+        }
 
     ####### ACTIONS ###########
     def action_go(self, x, y):
@@ -199,9 +242,9 @@ class FractalisticApp(App):
         if self.options["debug"]:
             self.call_after_refresh(
                 self.log_write, ([
-                    f"Center on plane : [blue]{digits(center_on_plane)}",
-                    f"Pixel size : [blue]{digits(pixel_size)}",
-                    f"Screenshot pos on plane : [blue]{digits(screenshot_pos_on_plane)}"
+                    f"Center on plane: [blue]{digits(center_on_plane)}",
+                    f"Pixel size: [blue]{digits(pixel_size)}",
+                    f"Screenshot pos on plane: [blue]{digits(screenshot_pos_on_plane)}"
                 ])
             )
 
@@ -225,26 +268,38 @@ class FractalisticApp(App):
         self.screen_pos_on_plane = mpc(-self.canv_size.x / 2 * self.cell_size, self.canv_size.y / 2 * self.cell_size)
         self.update_canv()
 
+    @on(Input.Submitted, "Input")
+    def command_input_on_submitted(self, event: Input.Submitted):
+        command = event.value.strip()
+        self.command_input.value = ""
+
+        if len(command) == 0:
+            return
+
+        self.parse_command(command)
+
+
+
     ###### TEXTUAL APP VARS ######
 
     BINDINGS = [
-        Binding("left", "go(-1, 0)", "Left"),
-        Binding("right", "go(1, 0)", "Right"),
-        Binding("up", "go(0, 1)", "Up"),
-        Binding("down", "go(0, -1)", "Down"),
-        Binding("d", "zoom('in')", "Zoom in"),
-        Binding("s", "zoom('out')", "Zoom out"),
-        Binding("r", "reset", "Rst pos/zoom"),
-        Binding("c", "next_color", "Nxt Color Scheme"),
-        Binding("f", "next_fractal", "Nxt Fractal"),
-        Binding("p", "screenshot", "HD Screenshot"),
-        Binding("ctrl+c", "quit", "Quit", show=False)
-
+        Binding("ctrl+c", "quit", "Quit")
     ]
 
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
 
     ####### UTILS ########
+
+    def parse_command(self, text):
+        args = list(filter(lambda x: len(x) > 0, text.split(" ")))
+        
+        command = args.pop(0)
+        
+        if not command in self.command_list:
+            self.log_write(f"[red]Cannot find command: [white on red]{command}")
+            return 
+
+        self.command_list[command].funct(args)
 
     @property
     def selected_fractal(self): 
@@ -256,7 +311,7 @@ class FractalisticApp(App):
 
     def rewrite_logs(self):
         """Rewrite the logs so that they fit the new log panel size when the terminal is resized"""
-        
+        self.print_log_bar = False
         self.rich_log.clear()
         for line in self.logs:
             self._log_write(line)
@@ -269,8 +324,10 @@ class FractalisticApp(App):
         if isinstance(content, str):
             content = [content]
 
-        if len(self.logs) > 0:
+        if self.print_log_bar:
             self.rich_log.write(Rule(), expand=True)
+        else:
+            self.print_log_bar = True
 
         for line in content:
             self.rich_log.write(line, shrink=True)
@@ -313,14 +370,20 @@ class FractalisticApp(App):
         """
         Remove the previous canvas and create a new one corresponding to self.canv_size
         """
+        
+        focused = isinstance(self.focused, FractalCanv)
 
         # Remove the previous canvas widget 
         await self.canv.remove()
-        
+
         # And create a new one
-        self.canv = Canvas(self.canv_size.x, self.canv_size.y)
-        self.canv.can_focus = False
-        await self.container.mount(self.canv, before=self.rich_log)
+        self.canv = FractalCanv(self.canv_size.x, self.canv_size.y)
+
+        await self.container.mount(self.canv, before=self.right_container)
+        
+        if focused:
+            self.canv.focus()
+            
         self.update_canv()
 
 
@@ -378,9 +441,9 @@ class FractalisticApp(App):
             self.log_write(
                 [
                     f"[on red] Click info ",
-                    f"Clicked at (c) : {c_num:.4f}",
-                    f"Clicked at (pos) : {self.marker_pos}",
-                    f"Divergence : {divergence}",
+                    f"Clicked at (c): {c_num:.4f}",
+                    f"Clicked at (pos): {self.marker_pos}",
+                    f"Divergence: {divergence}",
                 ]
             )
 
@@ -405,17 +468,23 @@ class FractalisticApp(App):
         yield Footer()
         yield self.progress_bar
 
-        # Prevent the log panel and the canv from being focused
-        self.rich_log.can_focus = False
-        self.canv.can_focus = False
+        self.set_command_list()
 
+        self.command_input.border_title = "Command Input"
+        self.rich_log.border_title = "Logs Panel"
 
 
     async def on_ready(self):
-        # Mount the canvas and the log panel in the container
-        await self.container.mount(self.canv)
-        await self.container.mount(self.rich_log)
+        # Mount the log panel and the command input in the right container
+        await self.right_container.mount(self.rich_log)
+        await self.right_container.mount(self.command_input)
         
+        # Mount the canvas and the right container in the container
+        
+
+        await self.container.mount(self.canv)
+        await self.container.mount(self.right_container)
+
         # Mount the container
         await self.app.mount(self.container)
 
@@ -425,13 +494,17 @@ class FractalisticApp(App):
         self.ready = True
         self.action_reset()
 
+        self.canv.focus()
+        
+
         self.log_write([
             f"[on blue]Welcome to Fractalistic {VERSION}",
-            f"Author : [purple]Léopold Koprivnik[/purple]",
-            f"GitHub repo : [purple]SkwalExe/fractalistic[/purple]",
+            f"Author: [purple]Léopold Koprivnik[/purple]",
+            f"GitHub repo: [purple]SkwalExe/fractalistic[/purple]",
         ])
         self.log_write(f"If you are experiencing slow rendering, try to reduce the size of your terminal.")
     
+
     def on_resize(self, event = None) -> None:
         self.call_after_refresh(self.after_resize)
 
@@ -440,5 +513,3 @@ class FractalisticApp(App):
         self.set_canv_size()
         await self.update_canvas_size()
         self.rewrite_logs()
-        
-    

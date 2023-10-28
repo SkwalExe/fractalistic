@@ -1,5 +1,5 @@
 textual==0.38.1
-click_extra==4.6.0
+click_extra==4.7.1
 gmpy2==2.1.5
 pillow==9.5.0
 asyncio==3.4.3

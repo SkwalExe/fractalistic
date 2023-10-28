@@ -1,12 +1,11 @@
-Canvas, RichLog {
+Canvas, RichLog, Input {
     border: round grey;
-    margin: 1 2;
     overflow-x: hidden;
+    background: transparent;
 }
 
-RichLog {
-    width: 30%;
-    max-width: 50;
+Canvas, #right_container {
+    margin: 1 2;
 }
 
 .hidden {
@@ -18,3 +17,12 @@ Screen, #container {
     align: center middle;
 }
 
+#right_container {
+    width: 30%;
+    max-width: 50;
+    height: 100%;
+}
+
+*:focus {
+    border: round $accent-darken-1;
+}
