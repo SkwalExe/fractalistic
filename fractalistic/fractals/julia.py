@@ -8,7 +8,8 @@ class Julia(FractalBase):
     Un+1 = Un² - 1
     """
     message = "Click a point in the complex plane to generate the corresponding Julia set."
-
+    
+    @staticmethod
     def get(config: QueryConfig) -> int:
         i = 0
         n = config.point_in_plane
