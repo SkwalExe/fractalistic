@@ -64,25 +64,26 @@ python3 fractalistic/main.py
 
 Possible features to add later:
 - [ ] Create a PyPI package
-- [ ] Color smoothing
 - [ ] Key to increase/decrease max iterations
-- [ ] Key to increase/decrease zoom speed
-- [ ] Key to increase/decrease move speed
-- [x] Show how long it took to render the last frame
-- [ ] Key to show current position, zoom, interations, etc
-- [x] Prevent event queue from overflowing and freezing the program
-- [ ] Key to clear log messages
 - [ ] Use center as screen pos instead of top left corner
 - [ ] Show zoom level in the title bar
 - [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
-- [ ] Press H for help
 - [ ] Splash screen
-- [x] Custom julia set c value (z² - c)
+- [ ] Custom mandelbrot/burning ship starting value or exponent
+
+Commands:
+- [ ] Command to increase/decrease zoom speed
+- [ ] Command to increase/decrease move speed
+- [ ] Command to increase/decrease max iter
+- [ ] Command to show current pos, zoom, etc
+- [ ] Command to set decimal precision
+- [ ] Command to screenshot (with size as args optionnaly)
+- [ ] Command to save position to file
+- [ ] Precise help command to explain args (ex: `help cmd_name`)
+- [ ] Command to load position from a file
 
 Command line options :
 - [ ] Load fractal, position, and zoom from a file
-- [ ] Custom zoom speed
-- [ ] Custom move speed
 
 # Development 
 

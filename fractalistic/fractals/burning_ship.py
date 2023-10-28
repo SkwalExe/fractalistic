@@ -10,6 +10,7 @@ class BurningShip(FractalBase):
 
     message = None
 
+    @staticmethod
     def get(config: QueryConfig) -> int:
         i = 0
         z = mpc(0, 0)
