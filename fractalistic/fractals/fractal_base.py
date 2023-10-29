@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from query_config import QueryConfig
+from ..query_config import QueryConfig
 
 class FractalBase(ABC):
     """Base class for fractals."""
