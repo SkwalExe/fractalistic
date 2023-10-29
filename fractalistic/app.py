@@ -6,21 +6,21 @@ from textual.events import Click, Key
 from textual import log
 from textual.color import Color
 from textual import on
-###### Fractals
-import fractals
+###### Local imports
+from . import fractals
+from .utils import *
+from . import colors
+from .version import VERSION
+from .query_config import QueryConfig
+from .command import Command
+from .fractal_canv import FractalCanv
 ###### Other imports
-from utils import *
-import colors
 import os
-from fractal_canv import FractalCanv
 from PIL import Image
 import asyncio
 from typing import Any, Callable
-from command import Command
 from rich.rule import Rule
 from time import monotonic, sleep, time
-from query_config import QueryConfig
-from version import VERSION
 from gmpy2 import mpc, digits, mpfr
 #####################
 

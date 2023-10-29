@@ -1,4 +1,4 @@
-from query_config import QueryConfig
+from ..query_config import QueryConfig
 from .fractal_base import FractalBase
 from gmpy2 import mpc
 

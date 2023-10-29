@@ -1,5 +1,5 @@
 from gmpy2 import mpc
-from query_config import QueryConfig
+from ..query_config import QueryConfig
 from .fractal_base import FractalBase
 
 class Mandelbrot(FractalBase):

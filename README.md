@@ -37,7 +37,7 @@ pip install -r requirements.txt
 Run the program
 
 ```bash
-python3 fractalistic/main.py
+python3 -m fractalistic
 ```
 
 

@@ -4,12 +4,13 @@
 ###### Click Extra
 from click_extra import extra_command, option
 from click_extra import IntRange, Choice
+###### Local imports
+from .utils import *
+from .app import FractalisticApp
+from .version import VERSION
+from .colors import color_renderers
+from .fractals import fractal_list
 ###### Others
-from utils import *
-from app import FractalisticApp
-from version import VERSION
-from colors import color_renderers
-from fractals import fractal_list
 import gmpy2
 ###############
   
