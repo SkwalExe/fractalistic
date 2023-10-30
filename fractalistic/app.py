@@ -73,6 +73,9 @@ class FractalisticApp(App):
     command_list: dict[str, Command]
     """List of commands"""
 
+    average_divergence: float = 0
+    """Average divergence of the current canvas render"""
+
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
     """Container for the canvas and the right container"""
@@ -536,6 +539,10 @@ class FractalisticApp(App):
         self.renders += 1
         start = monotonic()
 
+        # Used to get the average divergence of the current render
+        divergence_sum = 0
+        term_count = 0
+
         with self.app.batch_update():
             # y : [0; height[
             for y in range(self.canv.height):
@@ -552,9 +559,16 @@ class FractalisticApp(App):
                     c_num = self.pos_to_c(Vec(x, y))
                     # the result is -1 or the number of iteration it took for the series to diverge
                     result = self.get_divergence(c_num)
+
+                    if result != -1:
+                        divergence_sum += result
+                        term_count += 1
+
                     # Get a color from the result
                     color = Color.parse("black") if result == -1 else self.selected_color(result)
                     self.canv.set_pixel(x, y, color)
+
+        self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
                  
         self.last_render_time = monotonic() - start
 
@@ -563,7 +577,7 @@ class FractalisticApp(App):
         self.ready = True
 
     def update_border_info(self):
-        self.canv.border_title = f"{self.renders} renders | {self.canv_size.x * self.canv_size.y} points"
+        self.canv.border_title = f"Average divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} points | {self.renders} renders"
         self.canv.border_subtitle = f"{self.last_render_time:.4f} seconds | {self.options['max_iter']} iterations"
     
    
