@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png">
+  <img src="https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/logo.png">
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 # Fractalistic
 
 <p align="center">
-  <img src="assets/banner.png">
+  <img src="https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/banner.png">
 </p>
 
 # How to install 📥
@@ -91,12 +91,12 @@ Please, open an issue if you have any suggestion or if you found a bug. I will t
 
 # Screenshots
 
-![Screenshot 1](assets/screenshot1.png)
+![Screenshot 1](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot1.png)
 
-![Screenshot 3](assets/screenshot3.png)
+![Screenshot 3](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot3.png)
 
-![Screenshot 2](assets/screenshot2.png)
+![Screenshot 2](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot2.png)
 
-![Screenshot 4](assets/screenshot4.png)
+![Screenshot 4](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot4.png)
 
-![Screenshot 5](assets/screenshot5.png)
+![Screenshot 5](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot5.png)
