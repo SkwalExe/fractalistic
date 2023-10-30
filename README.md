@@ -21,23 +21,20 @@
 
 # How to install 📥
 
-Clone the repo
-
+You can install fractalistic easily with pip:
 ```bash
-git clone https://github.com/SkwalExe/fractalistic
-cd fractalistic
+python3 -m pip install fractalistic
 ```
 
-Install the dependencies
-
+If you want to install the application securely, in an isolated environment, you can use [pipx](https://pypa.github.io/pipx/):
 ```bash
-pip install -r requirements.txt
+pipx install fractalistic
 ```
 
-Run the program
 
+Now start the program with:
 ```bash
-python3 -m fractalistic
+fractalistic
 ```
 
 
@@ -63,7 +60,6 @@ python3 -m fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Create a PyPI package
 - [ ] Key to increase/decrease max iterations
 - [ ] Use center as screen pos instead of top left corner
 - [ ] Show zoom level in the title bar
