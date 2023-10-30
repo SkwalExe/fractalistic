@@ -73,9 +73,7 @@ Commands:
 - [ ] Command to increase/decrease max iter
 - [ ] Command to show current pos, zoom, etc
 - [ ] Command to set decimal precision
-- [ ] Command to screenshot (with size as args optionnaly)
 - [ ] Command to save position to file
-- [ ] Precise help command to explain args (ex: `help cmd_name`)
 - [ ] Command to load position from a file
 
 Command line options :
