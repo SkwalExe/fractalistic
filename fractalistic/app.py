@@ -10,7 +10,7 @@ from textual import on
 from . import fractals
 from .utils import *
 from . import colors
-from .version import VERSION
+from . import __version__
 from .query_config import QueryConfig
 from .command import Command
 from .fractal_canv import FractalCanv
@@ -109,7 +109,7 @@ class FractalisticApp(App):
         self.exit()
 
     def command_version(self, args):
-        self.log_write(f"Fractalistic version: [on blue]{VERSION}")
+        self.log_write(f"Fractalistic version: [on blue]{__version__}")
 
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
@@ -498,7 +498,7 @@ class FractalisticApp(App):
         
 
         self.log_write([
-            f"[on blue]Welcome to Fractalistic {VERSION}",
+            f"[on blue]Welcome to Fractalistic {__version__}",
             f"Author: [purple]Léopold Koprivnik[/purple]",
             f"GitHub repo: [purple]SkwalExe/fractalistic[/purple]",
         ])
