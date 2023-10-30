@@ -2,7 +2,7 @@
 from textual.app import App
 from textual.widgets import Footer, ProgressBar, RichLog, Static, Input
 from textual.binding import Binding
-from textual.events import Click, Key
+from textual.events import Click
 from textual import log
 from textual.color import Color
 from textual import on
@@ -157,10 +157,59 @@ class FractalisticApp(App):
 
             self.action_screenshot(self.get_screenshot_size_fit(quality))
 
+    def command_max_iter(self, args):
+        if len(args) == 1:
+            try:
+                value = int(args[0])
+            except ValueError:
+                self.log_write("[red]max_iter value must be an integer")
+                return
+            
+            if value < 5:
+                self.log_write("[red]max_iter value must be greater than 5")
+                return
+        
+            self.options["max_iter"] = value
+
+        
+        elif len(args) == 2:
+            sign = args[0]
+            value = args[1]
+
+            if not sign in ["+", "-"]:
+                self.log_write(f"[red]Unknown sign: {sign}")
+                return
+            
+            try:
+                value = int(value)
+            except ValueError:
+                self.log_write("[red]value must be an integer")
+                return
+            
+            new_value = self.options["max_iter"] + (value if sign == "+" else -value)
+
+            if new_value < 5:
+                self.log_write("[red]max_iter value must be greater than 5")
+                return
+            
+            self.options["max_iter"] = new_value
+            
+        self.log_write(f"max_iter set to [blue]{self.options['max_iter']}")
+        self.update_canv()
+
+            
+            
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
         self.command_list = {
+            "max_iter": Command(
+                funct=self.command_max_iter,
+                help="Change the maximum number of iterations used to determine if a point converges or not",
+                accepted_arg_counts=[1, 2], 
+                extra_help="[green]Usage : max_iter +/- \\[value].\nUsage : max_iter \\[value].[/green]\nIf no sign is specified (first argument), the value is set to the one specified. If a sign is specified, the value is incremented or decremented by the specified value."
+            ),
             "capture": Command(
                 funct=self.command_capture, 
                 help="Take a high quality screenshot",
@@ -171,7 +220,7 @@ class FractalisticApp(App):
                 funct=self.command_capture_fit, 
                 help="Take a high quality screenshot that fits the size of the canvas",
                 accepted_arg_counts=[0, 1], 
-                extra_help="[green]Usage : capture \\[quality].[/green]\nIf no quality is specified, the command line settings are used."
+                extra_help="[green]Usage : capture_fit \\[quality].[/green]\nIf no quality is specified, the command line settings are used."
             ),
             "version": Command(self.command_version, "Show the version number", [0]),
             "clear": Command(self.command_clear, "Clear the log panel", [0]),
@@ -515,7 +564,7 @@ class FractalisticApp(App):
 
     def update_border_info(self):
         self.canv.border_title = f"{self.renders} renders | {self.canv_size.x * self.canv_size.y} points"
-        self.canv.border_subtitle = f"{self.last_render_time:.4f} seconds"
+        self.canv.border_subtitle = f"{self.last_render_time:.4f} seconds | {self.options['max_iter']} iterations"
     
    
     
@@ -530,14 +579,12 @@ class FractalisticApp(App):
             c_num = self.pos_to_c(self.marker_pos)
             divergence = self.get_divergence(c_num)
 
-            self.log_write(
-                [
-                    f"[on red] Click info ",
-                    f"Clicked at (c): {c_num:.4f}",
-                    f"Clicked at (pos): {self.marker_pos}",
-                    f"Divergence: {divergence}",
-                ]
-            )
+            self.log_write([
+                f"[on red] Click info ",
+                f"Clicked at (c): {c_num:.4f}",
+                f"Clicked at (pos): {self.marker_pos}",
+                f"Divergence: {divergence}",
+            ])
 
 
         elif event.button == 1 and self.selected_fractal.__name__ == "Julia":
@@ -595,6 +642,8 @@ class FractalisticApp(App):
             f"GitHub repo: [purple]SkwalExe/fractalistic[/purple]",
         ])
         self.log_write(f"If you are experiencing slow rendering, try to reduce the size of your terminal.")
+        self.log_write(f"You can change focus between the canvas, the log panel and the command input using [blue]tab[/blue] or [blue]with your mouse[/blue].")
+
     
 
     def on_resize(self, event = None) -> None:

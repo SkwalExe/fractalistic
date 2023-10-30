@@ -60,17 +60,16 @@ fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Key to increase/decrease max iterations
 - [ ] Use center as screen pos instead of top left corner
 - [ ] Show zoom level in the title bar
 - [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
 - [ ] Splash screen
 - [ ] Custom mandelbrot/burning ship starting value or exponent
+- [ ] app.log_error(), etc utility functions
 
 Commands:
 - [ ] Command to increase/decrease zoom speed
 - [ ] Command to increase/decrease move speed
-- [ ] Command to increase/decrease max iter
 - [ ] Command to show current pos, zoom, etc
 - [ ] Command to set decimal precision
 - [ ] Command to save position to file
