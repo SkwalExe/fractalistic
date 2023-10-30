@@ -1,9 +1,13 @@
-# Unreleased - 2023-10-30
+# 0.3.0 - 2023-10-30
 
 ### Added
 - Capture command
 - CaptureFit command 
+- MaxIter command
 - Extra help for commands (`help command_name`)
+
+### Fixed
+- Errors in help messages
 
 # 0.2.0 - 2023-10-30
 
