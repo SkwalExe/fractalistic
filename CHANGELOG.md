@@ -1,8 +1,9 @@
-# [Unreleased]
+# [0.2.0] - 2023-10-30
 
 ### Added
 - Command input below log panel
 - `-v` / `--version` option
+- Published on PyPI
 
 ### Fixed
 - Minor imperfections
