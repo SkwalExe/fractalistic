@@ -70,7 +70,7 @@ class FractalisticApp(App):
     print_log_bar: bool = False
     """If we should print a log bar before showing the message in the log panel"""
 
-    command_list: dict[str, Callable]
+    command_list: dict[str, Command]
     """List of commands"""
 
     ###### DOM ELEMENTS #####
@@ -94,11 +94,23 @@ class FractalisticApp(App):
 
     ####### COMMANDS ###########
     def command_help(self, args):
-        command_desc = [f"- [blue]{name}[/blue]: {self.command_list[name].help}" for name in self.command_list]
-        self.log_write([
-            f"[on blue]Available commands",
-            *command_desc
-        ])
+        if len(args) == 0:
+            command_desc = [f"- [blue]{name}[/blue]: {self.command_list[name].help}" for name in self.command_list]
+            self.log_write([
+                f"[on blue]Available commands",
+                *command_desc,
+                f"[green]Use 'help command_name' to get more info about a command"
+            ])
+        elif len(args) == 1:
+            command = self.get_command(args[0])
+            if command is None:
+                return
+            
+            self.log_write([
+                f"[on blue]{args[0]} command",
+                command.help,
+                command.extra_help
+            ])
 
     def command_clear(self, args):
         self.rich_log.clear()
@@ -111,14 +123,60 @@ class FractalisticApp(App):
     def command_version(self, args):
         self.log_write(f"Fractalistic version: [on blue]{__version__}")
 
+    def command_capture(self, args):
+        if len(args) == 0:
+            self.action_screenshot()
+        elif len(args) == 2:
+            try:
+                width = int(args[0])
+                height = int(args[1])
+            except ValueError:
+                self.log_write("Width and height must be integers")
+                return
+
+            if width <= 0 or height <= 0:
+                self.log_write("Width and height must be positive")
+                return
+
+
+            self.action_screenshot(Vec(width, height))
+
+    def command_capture_fit(self, args):
+        if len(args) == 0:
+            self.action_screenshot(self.get_screenshot_size_fit())
+        elif len(args) == 1:
+            try:
+                quality = int(args[0])
+            except ValueError:
+                self.log_write("Quality must be an integer")
+                return
+
+            if quality <= 0:
+                self.log_write("Quality must be positive")
+                return
+
+            self.action_screenshot(self.get_screenshot_size_fit(quality))
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
         self.command_list = {
-            "version": Command(self.command_version, "Show the version number"),
-            "clear": Command(self.command_clear, "Clear the log panel"),
-            "quit": Command(self.command_quit, "Exit the app"),
-            "help": Command(self.command_help, "Show this message")
+            "capture": Command(
+                funct=self.command_capture, 
+                help="Take a high quality screenshot",
+                accepted_arg_counts=[0, 2], 
+                extra_help="[green]Usage : capture \\[width] \\[height].[/green]\nIf no width and height are specified, the command line settings are used."
+            ),
+            "capture_fit": Command(
+                funct=self.command_capture_fit, 
+                help="Take a high quality screenshot that fits the size of the canvas",
+                accepted_arg_counts=[0, 1], 
+                extra_help="[green]Usage : capture \\[quality].[/green]\nIf no quality is specified, the command line settings are used."
+            ),
+            "version": Command(self.command_version, "Show the version number", [0]),
+            "clear": Command(self.command_clear, "Clear the log panel", [0]),
+            "quit": Command(self.command_quit, "Exit the app", [0]),
+            "help": Command(self.command_help, "Show the help message", [0, 1])
         }
 
     ####### ACTIONS ###########
@@ -183,23 +241,24 @@ class FractalisticApp(App):
             
         self.log_write(to_write)
 
-    def action_screenshot(self):
+    def action_screenshot(self, screenshot_size: Vec | None = None):
         if not self.ready:
             return
 
+    
         # I dont know why this is working
         # Execute action_screenshot_2 in a non-blocking way
-        asyncio.get_event_loop().run_in_executor(None, self.action_screenshot_2)
+        asyncio.get_event_loop().run_in_executor(None, self.action_screenshot_2, (screenshot_size))
 
-    def action_screenshot_2(self):
+    def action_screenshot_2(self, screenshot_size: Vec | None):
         self.ready = False
 
-        if self.options["fit_screenshots"]:
-            screenshot_width = self.canv_size.x * self.options["screenshot_quality"]
-            screenshot_height = self.canv_size.y * self.options["screenshot_quality"]
-        else:
-            screenshot_width = self.options["size"].x
-            screenshot_height = self.options["size"].y
+        if screenshot_size is None:
+            screenshot_size = self.get_screenshot_size_from_options()
+
+        screenshot_width = screenshot_size.x
+        screenshot_height = screenshot_size.y
+        
 
         self.container.add_class("hidden")
         self.progress_bar.remove_class("hidden")
@@ -249,7 +308,7 @@ class FractalisticApp(App):
             )
 
 
-        self.call_after_refresh(self.log_write, (f"Screenshot saved to [on violet]{save_to}[/on violet]"))
+        self.call_after_refresh(self.log_write, (f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}[/on violet]"))
         
         self.ready = True
         self.call_after_refresh(self.on_resize)
@@ -290,16 +349,47 @@ class FractalisticApp(App):
 
     ####### UTILS ########
 
-    def parse_command(self, text):
+    def get_command(self, name: str) -> Command:
+        if not name in self.command_list:
+            self.log_write(f"[red]Cannot find command: [white on red]{name}")
+            return None
+
+        return self.command_list[name]
+
+    def get_screenshot_size_fit(self, quality: int | None = None):
+        """
+        Return the size of the screenshot so that it fits the terminal
+        """
+
+        if quality is None:
+            quality = self.options["screenshot_quality"]
+
+        screenshot_width = self.canv_size.x * quality
+        screenshot_height = self.canv_size.y * quality
+    
+        return Vec(screenshot_width, screenshot_height)
+
+
+    def get_screenshot_size_from_options(self, fit_quality: int | None = None):
+        if self.options["fit_screenshots"]:
+            return self.get_screenshot_size_fit(fit_quality)
+    
+        return Vec(self.options["size"].x, self.options["size"].y)
+
+    def parse_command(self, text: str):
         args = list(filter(lambda x: len(x) > 0, text.split(" ")))
         
-        command = args.pop(0)
-        
-        if not command in self.command_list:
-            self.log_write(f"[red]Cannot find command: [white on red]{command}")
+        command_name = args.pop(0)
+        command = self.get_command(command_name)
+
+        if command is None:
             return 
 
-        self.command_list[command].funct(args)
+        if not len(args) in command.accepted_arg_count:
+            self.log_write(f"[red]Command [white on red]{command_name}[/white on red] expects {', or '.join([str(x) for x in command.accepted_arg_count])} arguments, got {len(args)}")
+            return 
+
+        command.funct(args)
 
     @property
     def selected_fractal(self): 
@@ -321,7 +411,7 @@ class FractalisticApp(App):
         self.logs.append(content)
 
     def _log_write(self, content):
-        if isinstance(content, str):
+        if not isinstance(content, list):
             content = [content]
 
         if self.print_log_bar:
@@ -330,6 +420,8 @@ class FractalisticApp(App):
             self.print_log_bar = True
 
         for line in content:
+            if line is None:
+                continue
             self.rich_log.write(line, shrink=True)
 
 
