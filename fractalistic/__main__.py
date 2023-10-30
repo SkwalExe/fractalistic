@@ -7,7 +7,7 @@ from click_extra import IntRange, Choice
 ###### Local imports
 from .utils import *
 from .app import FractalisticApp
-from .version import VERSION
+from . import __version__
 from .colors import color_renderers
 from .fractals import fractal_list
 ###### Others
@@ -31,7 +31,7 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
 
     # If -v or --version is used, show version and exit
     if version:
-        print(VERSION)
+        print(__version__)
         quit()
 
     # Set gmpy2 decimal precision
