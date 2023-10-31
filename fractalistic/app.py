@@ -29,7 +29,7 @@ class FractalisticApp(App):
     """The height and width of one pixel in the complex plane"""
 
     screen_pos_on_plane: mpc
-    """The position of the top left corner in the plane"""
+    """The position of the of the canvas in the plane"""
 
     canv_size: Vec
     """The number of rows and cols of the canvas"""
@@ -252,20 +252,7 @@ class FractalisticApp(App):
         if not direction in ["in", "out"]:
             raise ValueError("zoom direction must be 'in' or 'out'")
         
-        prev_height = self.canv_size.y * self.cell_size
-        prev_width = self.canv_size.x * self.cell_size
-
         self.cell_size *= 1 + self.zoom_intensity * (1 if direction == "out" else -1)
-        new_height = self.canv_size.y * self.cell_size
-        new_width = self.canv_size.x * self.cell_size
-
-        diff_h = (prev_height - new_height) if direction == "in" else (new_height - prev_height)
-        diff_w = (prev_width - new_width) if direction == "in" else (new_width - prev_width)
-
-        if direction == "in":
-            self.screen_pos_on_plane += mpc(diff_w / 2, -diff_h / 2)
-        else:
-            self.screen_pos_on_plane += mpc(-diff_w / 2, diff_h / 2)
 
         self.update_canv()
 
@@ -318,19 +305,14 @@ class FractalisticApp(App):
 
         image = Image.new("RGB", (screenshot_width, screenshot_height), (0, 0, 0))
 
-        # The complex number corresponding to the center of the canvas
-        center_on_plane = self.get_center_on_plane()
 
         # The size in the complex plane, of a pixel of the screenshot
         pixel_size = self.canv_size.x * self.cell_size / screenshot_width
 
-        # the position of the top left hand corner of the screenshot in the complex plane
-        screenshot_pos_on_plane = center_on_plane + mpc(-pixel_size*screenshot_width/2, pixel_size*screenshot_height/2)
-        
 
         for y in range(screenshot_height):
             for x in range(screenshot_width):
-                c_num = self.pos_to_c(Vec(x, y), pixel_size, screenshot_pos_on_plane)
+                c_num = self.pos_to_c(Vec(x, y), pixel_size)
                 result = self.get_divergence(c_num)
 
                 # Get a color from the result
@@ -376,7 +358,7 @@ class FractalisticApp(App):
         self.marker_pos = None
 
         self.cell_size = 4 / self.canv_size.x
-        self.screen_pos_on_plane = mpc(-self.canv_size.x / 2 * self.cell_size, self.canv_size.y / 2 * self.cell_size)
+        self.screen_pos_on_plane = mpc(0, 0)
         self.update_canv()
 
     @on(Input.Submitted, "Input")
@@ -492,11 +474,7 @@ class FractalisticApp(App):
             screen_pos_on_plane = self.screen_pos_on_plane
 
 
-        return mpc(pos.x * cell_size, pos.y * -cell_size) + screen_pos_on_plane
-
-    def get_center_on_plane(self) -> mpc:
-        """Return the center of the canvas in the complex plane"""
-        return self.screen_pos_on_plane + mpc(self.canv_size.x // 2 * self.cell_size, -self.canv_size.y // 2 * self.cell_size)
+        return mpc((pos.x - self.canv_size.x//2) * cell_size, (pos.y - self.canv_size.y // 2) * -cell_size) + screen_pos_on_plane
 
     def set_canv_size(self):
         """
