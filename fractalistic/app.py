@@ -92,6 +92,9 @@ class FractalisticApp(App):
     command_input: Input = Input(placeholder="help")
     """Command input"""
 
+    first_resize: bool = False
+    """If the first resize event was already fired"""
+
     ####### COMMANDS ###########
     def command_help(self, args):
         if len(args) == 0:
@@ -627,7 +630,10 @@ class FractalisticApp(App):
         # Mount the container
         await self.app.mount(self.container)
 
-        
+        # Call after a refresh because sometimes the canvas isn't mounted in time and its size is 0 which causes div0 error
+        self.call_after_refresh(self.on_ready_)
+    
+    def on_ready_(self):
         self.set_canv_size()
 
         self.ready = True
@@ -644,9 +650,14 @@ class FractalisticApp(App):
         self.log_write(f"If you are experiencing slow rendering, try to reduce the size of your terminal.")
         self.log_write(f"You can change focus between the canvas, the log panel and the command input using [blue]tab[/blue] or [blue]with your mouse[/blue].")
 
-    
+        self.on_resize()
 
     def on_resize(self, event = None) -> None:
+        
+        if not self.first_resize:
+            self.first_resize = True
+            return
+
         self.call_after_refresh(self.after_resize)
 
 
