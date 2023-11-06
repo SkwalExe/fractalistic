@@ -60,7 +60,7 @@ fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Use center as screen pos instead of top left corner
+- [ ] Allow cancel screenshot
 - [ ] Show zoom level in the title bar
 - [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
 - [ ] Splash screen

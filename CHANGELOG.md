@@ -1,3 +1,8 @@
+# 0.4.0 - Unreleased
+
+### Added
+- Average divergence
+
 # 0.3.1 - 2023-11-06
 
 ### Fixed
