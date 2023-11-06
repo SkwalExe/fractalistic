@@ -3,6 +3,11 @@
 ### Added
 - Average divergence
 
+# 0.3.1 - 2023-11-06
+
+### Fixed
+- Fix bug #17
+
 # 0.3.0 - 2023-10-30
 
 ### Added
