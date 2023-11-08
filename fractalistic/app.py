@@ -76,6 +76,9 @@ class FractalisticApp(App):
     average_divergence: float = 0
     """Average divergence of the current canvas render"""
 
+    cancel_screenshot: bool = False
+    """True when the current screenshot operation must be cancelled as soon as possible"""
+
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
     """Container for the canvas and the right container"""
@@ -235,6 +238,11 @@ class FractalisticApp(App):
         }
 
     ####### ACTIONS ###########
+    def action_cancel_screenshot(self):
+        self.cancel_screenshot = True
+        self.log_write("Screenshot cancelled")
+
+
     def action_go(self, x, y):
         if not self.ready:
             return
@@ -287,13 +295,15 @@ class FractalisticApp(App):
         if not self.ready:
             return
 
-    
         # I dont know why this is working
         # Execute action_screenshot_2 in a non-blocking way
         asyncio.get_event_loop().run_in_executor(None, self.action_screenshot_2, (screenshot_size))
 
     def action_screenshot_2(self, screenshot_size: Vec | None):
         self.ready = False
+
+        # Dynamically bind the escape key to the cancel_screenshot action
+        self.app.bind("escape", "cancel_screenshot", description="Cancel Screenshot")
 
         if screenshot_size is None:
             screenshot_size = self.get_screenshot_size_from_options()
@@ -304,6 +314,8 @@ class FractalisticApp(App):
 
         self.container.add_class("hidden")
         self.progress_bar.remove_class("hidden")
+
+
         self.progress_bar.update(total=screenshot_height//10, progress=0)
 
         image = Image.new("RGB", (screenshot_width, screenshot_height), (0, 0, 0))
@@ -314,6 +326,11 @@ class FractalisticApp(App):
 
 
         for y in range(screenshot_height):
+            
+            # If the screenshot is cancelled, stop generating
+            if self.cancel_screenshot:
+                break
+            
             for x in range(screenshot_width):
                 c_num = self.pos_to_c(Vec(x, y), pixel_size)
                 result = self.get_divergence(c_num)
@@ -326,30 +343,40 @@ class FractalisticApp(App):
                 # Make the progress bar advance every 10 rows
                 self.progress_bar.advance()
 
-
-        sleep(1)
+        # If the screenshot wasn't cancelled, save the screenshot to a file, put a message in the log panel
+        # And wait one second to allow the user to see that the operation is finished successfully.
+        if not self.cancel_screenshot:
+            save_to = f"{self.selected_fractal.__name__}_screenshot_{int(time())}.png"
+            image.save(save_to)
+            self.call_after_refresh(self.log_write, (f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}[/on violet]"))
+            sleep(1)
 
         self.progress_bar.add_class("hidden")
         self.container.remove_class("hidden")
-        
-        save_to = f"{self.selected_fractal.__name__}_screenshot_{int(time())}.png"
-        image.save(save_to)
-        
-        if self.options["debug"]:
-            self.call_after_refresh(
-                self.log_write, ([
-                    f"Center on plane: [blue]{digits(center_on_plane)}",
-                    f"Pixel size: [blue]{digits(pixel_size)}",
-                    f"Screenshot pos on plane: [blue]{digits(screenshot_pos_on_plane)}"
-                ])
-            )
 
-
-        self.call_after_refresh(self.log_write, (f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}[/on violet]"))
-        
         self.ready = True
+
+        # Unbind the escape key by attrbuting a non-existing action
+        self.app.bind("escape", "pass", show=False)
+        
+        # Re-focus the canvas will also update the footer, it means it will hide the previous
+        # cancel screenshot binding, which is not removed when "unbinding"
+        self.set_focus(self.canv)
+
+        # Send the on_resize event, because the terminal could have been resized during the screenshot.
+        # Resize events aren't parsed during non-ready states
         self.call_after_refresh(self.on_resize)
-        self.call_after_refresh(self.rewrite_logs)
+
+        # Set cancel_screenshot back to false so that the next screenshot isn't unwantedly cancelled
+        self.cancel_screenshot = False
+
+    def action_quit_(self):
+        """We don't use the builtin quit action because it doesn't work during screenshots"""
+
+        # Cancel any ongoing screenshots before leaving
+        self.action_cancel_screenshot()
+
+        self.exit()
 
     def action_reset(self):
         """Reset position and zoom"""
@@ -379,7 +406,7 @@ class FractalisticApp(App):
     ###### TEXTUAL APP VARS ######
 
     BINDINGS = [
-        Binding("ctrl+c", "quit", "Quit")
+        Binding("ctrl+c", "quit_", "Quit", priority=True)
     ]
 
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
@@ -588,12 +615,10 @@ class FractalisticApp(App):
 
             self.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
 
-            self.log_write(
-                [
-                    f"[on red] Current Julia Set ",
-                    f"{self.julia_click:.4f}",
-                ]
-            )
+            self.log_write([
+                f"[on red] Current Julia Set ",
+                f"{self.julia_click:.4f}",
+            ])
 
         self.update_canv()
 
