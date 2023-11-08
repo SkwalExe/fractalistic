@@ -60,7 +60,6 @@ fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Allow cancel screenshot
 - [ ] Show zoom level in the title bar
 - [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
 - [ ] Splash screen
@@ -81,6 +80,27 @@ Command line options :
 # Development 
 
 Please, open an issue if you have any suggestion or if you found a bug. I will try to fix it as soon as possible. If you want to contribute, open an empty pull request and explain what you want to do, wait for me to approve it and then you can start working on it.
+
+### Running the app in textual dev mode
+
+- First, open a textual console in a terminal with this command.
+
+```
+textual console
+```
+
+You will need to have `textual-dev` installed. You can install it with pip.
+
+```
+pip install textual-dev
+```
+
+- You can now open a new terminal, and start `fractalistic` in textual dev mode with :
+
+```bash
+# You must already be cd-ed into the repo directory
+TEXTUAL=devtools,debug python3 -m fractalistic
+```
 
 # Screenshots
 
