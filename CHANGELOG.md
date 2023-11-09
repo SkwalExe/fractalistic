@@ -2,6 +2,7 @@
 
 ### Added
 - Average divergence
+- Allow cancelling screenshots
 
 # 0.3.1 - 2023-11-06
 
