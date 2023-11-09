@@ -12,7 +12,7 @@ from .utils import *
 from . import colors
 from . import __version__
 from .query_config import QueryConfig
-from .command import Command
+from .command import Command, CommandIncrement, CommandIncrementArgParseResult
 from .fractal_canv import FractalCanv
 ###### Other imports
 import os
@@ -166,44 +166,11 @@ class FractalisticApp(App):
 
             self.action_screenshot(self.get_screenshot_size_fit(quality))
 
-    def command_max_iter(self, args):
-        if len(args) == 1:
-            try:
-                value = int(args[0])
-            except ValueError:
-                self.log_write("[red]max_iter value must be an integer")
-                return
-            
-            if value < 5:
-                self.log_write("[red]max_iter value must be greater than 5")
-                return
-        
-            self.options["max_iter"] = value
+    def command_max_iter(self, value: int):
+                
+        self.max_iter = value
 
-        
-        elif len(args) == 2:
-            sign = args[0]
-            value = args[1]
-
-            if not sign in ["+", "-"]:
-                self.log_write(f"[red]Unknown sign: {sign}")
-                return
-            
-            try:
-                value = int(value)
-            except ValueError:
-                self.log_write("[red]value must be an integer")
-                return
-            
-            new_value = self.options["max_iter"] + (value if sign == "+" else -value)
-
-            if new_value < 5:
-                self.log_write("[red]max_iter value must be greater than 5")
-                return
-            
-            self.options["max_iter"] = new_value
-            
-        self.log_write(f"max_iter set to [blue]{self.options['max_iter']}")
+        self.log_write(f"max_iter set to [blue]{self.max_iter}")
         self.update_canv()
 
             
@@ -213,11 +180,13 @@ class FractalisticApp(App):
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
         self.command_list = {
-            "max_iter": Command(
+            "max_iter": CommandIncrement(
                 funct=self.command_max_iter,
                 help="Change the maximum number of iterations used to determine if a point converges or not",
                 accepted_arg_counts=[1, 2], 
-                extra_help="[green]Usage : max_iter +/- \\[value].\nUsage : max_iter \\[value].[/green]\nIf no sign is specified (first argument), the value is set to the one specified. If a sign is specified, the value is incremented or decremented by the specified value."
+                extra_help="[green]Usage : max_iter +/- \\[value].\nUsage : max_iter \\[value].[/green]\nIf no sign is specified (first argument), the value is set to the one specified. If a sign is specified, the value is incremented or decremented by the specified value.",
+                app_attribute="max_iter",
+                min_value=6,
             ),
             "capture": Command(
                 funct=self.command_capture, 
@@ -413,6 +382,15 @@ class FractalisticApp(App):
 
     ####### UTILS ########
 
+    # Map app.max_iter to map.options['max_iter']
+    @property
+    def max_iter(self):
+        return self.options['max_iter']
+
+    @max_iter.setter
+    def max_iter(self, value):
+        self.options['max_iter'] = value
+
     def get_command(self, name: str) -> Command:
         if not name in self.command_list:
             self.log_write(f"[red]Cannot find command: [white on red]{name}")
@@ -451,9 +429,19 @@ class FractalisticApp(App):
 
         if not len(args) in command.accepted_arg_count:
             self.log_write(f"[red]Command [white on red]{command_name}[/white on red] expects {', or '.join([str(x) for x in command.accepted_arg_count])} arguments, got {len(args)}")
-            return 
+            return
 
-        command.funct(args)
+        if isinstance(command, CommandIncrement):
+            current_attribute_value = self.__getattribute__(command.app_attribute)
+
+            value = command.parse_args(current_attribute_value, args)
+            if value.success:
+                command.funct(value.new_value)                
+            else:
+                self.log_write(value.error_message)
+                return
+        else:
+            command.funct(args)
 
     @property
     def selected_fractal(self): 
