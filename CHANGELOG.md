@@ -3,6 +3,7 @@
 ### Added
 - Average divergence
 - Allow cancelling screenshots
+- `move_dist` command
 
 # 0.3.1 - 2023-11-06
 

@@ -1,3 +1,5 @@
+from inspect import cleandoc
+
 class Command():
     # No type definition for funct because of weird behaviour
     # of linter due to assignment to a Callable
@@ -24,7 +26,20 @@ class CommandIncrement(Command):
     app_attribute: str
 
     def __init__(self, app_attribute: str, min_value = None, max_value = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args, 
+            **kwargs, 
+            extra_help=cleandoc(
+                """
+                [green]Usage : +/- \\[value].
+                Usage : \\[value].[/green]
+                - If no arguments are passed, the current value is printed out.
+                - If no sign is specified but an argument is provided, the value is set to the one specified.
+                - If a sign is specified, the value is incremented or decremented by the second argument.\
+                """
+            ), 
+            accepted_arg_counts=[0, 1, 2]
+        )
         self.max_value = max_value
         self.min_value = min_value
         self.app_attribute = app_attribute
@@ -34,7 +49,11 @@ class CommandIncrement(Command):
     def parse_args(self, current_attrib_value, args):
         """Returns the new value if the args are valid, else None"""
         result = CommandIncrementArgParseResult()
-        if len(args) == 1:
+        if len(args) == 0:
+            result.error_message = f"The value is currently set to [blue]{current_attrib_value}"
+            return result
+
+        elif len(args) == 1:
             try:
                 result.new_value = int(args[0])
             except ValueError:

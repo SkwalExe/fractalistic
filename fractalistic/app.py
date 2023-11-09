@@ -174,7 +174,9 @@ class FractalisticApp(App):
         self.update_canv()
 
             
-            
+    def command_move_dist(self, value: int):
+        self.move_distance = value
+        self.log_write(f"Move distance set to [blue]{self.move_distance}")
 
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
@@ -183,10 +185,14 @@ class FractalisticApp(App):
             "max_iter": CommandIncrement(
                 funct=self.command_max_iter,
                 help="Change the maximum number of iterations used to determine if a point converges or not",
-                accepted_arg_counts=[1, 2], 
-                extra_help="[green]Usage : max_iter +/- \\[value].\nUsage : max_iter \\[value].[/green]\nIf no sign is specified (first argument), the value is set to the one specified. If a sign is specified, the value is incremented or decremented by the specified value.",
                 app_attribute="max_iter",
                 min_value=6,
+            ),
+            "move_dist": CommandIncrement(
+                funct=self.command_move_dist,
+                help="Change the distance to move when a key is pressed, in canvas cells.",
+                app_attribute="move_distance",
+                min_value=1
             ),
             "capture": Command(
                 funct=self.command_capture, 
