@@ -4,6 +4,7 @@
 - Average divergence
 - Allow cancelling screenshots
 - `move_dist` command
+- Value control commands without args now print out the current value
 
 # 0.3.1 - 2023-11-06
 
