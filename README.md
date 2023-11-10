@@ -60,8 +60,6 @@ fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Click pos command, set position to next click position
-- [ ] Show zoom level in the title bar
 - [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
 - [ ] Splash screen
 - [ ] Custom mandelbrot/burning ship starting value or exponent
