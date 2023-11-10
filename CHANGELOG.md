@@ -6,6 +6,7 @@
 - `move_dist` command
 - Value control commands without args now print out the current value
 - `zoom_lvl` command
+- `pos` command
 
 # Fixed
 - Some errors in help messages
