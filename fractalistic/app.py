@@ -79,6 +79,9 @@ class FractalisticApp(App):
     cancel_screenshot: bool = False
     """True when the current screenshot operation must be cancelled as soon as possible"""
 
+    current_zoom_level: str = "1"
+    """[NOT REACTIVE], current zoom level, updated at each render and used to show the zoom level in the cavas border subtitle"""
+
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
     """Container for the canvas and the right container"""
@@ -182,13 +185,30 @@ class FractalisticApp(App):
         self.move_distance = value
         self.log_write(f"Move distance set to [blue]{self.move_distance}")
 
+    def command_goto(self, args):
+        if len(args) == 0:
+            self.log_write(f"Current position: [blue]{self.screen_pos_on_plane.real}+{self.screen_pos_on_plane.imag}i")
+            return
+
+        real = None
+        imag = None
+        try:
+            real = mpfr(args[0])
+            imag = mpfr(args[1])
+        except ValueError:
+            self.log_write("Real and imaginary parts must be valid integers or floats")
+            return
+
+        self.screen_pos_on_plane = mpc(real, imag)
+        self.update_canv()
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
         self.command_list = {
             "max_iter": CommandIncrement(
                 funct=self.command_max_iter,
-                help="Change the maximum number of iterations used to determine if a point converges or not",
+                help="Change the maximum number of iterations used to determine if a point converges or not.",
                 app_attribute="max_iter",
                 min_value=6,
             ),
@@ -211,9 +231,15 @@ class FractalisticApp(App):
                 accepted_arg_counts=[0, 2], 
                 extra_help="[green]Usage : capture \\[width] \\[height].[/green]\nIf no width and height are specified, the command line settings are used."
             ),
+            "pos": Command(
+                funct=self.command_goto,
+                help="Set the position to a specific point in the complex plane.",
+                accepted_arg_counts=[0, 2],
+                extra_help="[green]Usage : \\[real] \\[imag]\nUsage : no args[/green]\nIf no arguments are given, just print out the current position. Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats."
+            ),
             "capture_fit": Command(
                 funct=self.command_capture_fit, 
-                help="Take a high quality screenshot that fits the size of the canvas",
+                help="Take a high quality screenshot that fits the size of the canvas.",
                 accepted_arg_counts=[0, 1], 
                 extra_help="[green]Usage : capture_fit \\[quality].[/green]\nIf no quality is specified, the command line settings are used."
             ),
@@ -584,16 +610,15 @@ class FractalisticApp(App):
                     self.canv.set_pixel(x, y, color)
 
         self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
-                 
+        self.current_zoom_level = f"{mpfr('4') / (self.cell_size * self.canv_size.x):.4e}"
         self.last_render_time = monotonic() - start
 
         self.update_border_info()
-
         self.ready = True
 
     def update_border_info(self):
-        self.canv.border_title = f"Average divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} points | {self.renders} renders"
-        self.canv.border_subtitle = f"{self.last_render_time:.4f} seconds | {self.options['max_iter']} iterations"
+        self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} pts | {self.renders} rndrs"
+        self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.options['max_iter']} iter"
     
    
     
