@@ -9,6 +9,7 @@
 - Value control commands without args now print out the current value
 - `zoom_lvl` command
 - `pos` command
+- Show zoom level in canvas border subtitle
 - `click_pos` command
 
 # Fixed
