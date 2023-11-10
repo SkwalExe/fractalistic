@@ -67,8 +67,6 @@ Possible features to add later:
 - [ ] app.log_error(), etc utility functions
 
 Commands:
-- [ ] Command to increase/decrease zoom speed
-- [ ] Command to increase/decrease move speed
 - [ ] Command to show current pos, zoom, etc
 - [ ] Command to set decimal precision
 - [ ] Command to save position to file
