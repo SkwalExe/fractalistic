@@ -82,6 +82,9 @@ class FractalisticApp(App):
     current_zoom_level: str = "1"
     """[NOT REACTIVE], current zoom level, updated at each render and used to show the zoom level in the cavas border subtitle"""
 
+    click_pos_enabled: bool = False
+    """Set the canvas position to the next click position"""
+
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
     """Container for the canvas and the right container"""
@@ -202,6 +205,16 @@ class FractalisticApp(App):
         self.screen_pos_on_plane = mpc(real, imag)
         self.update_canv()
 
+    def command_click_pos(self, args):
+        if len(args) == 1:
+            if not args[0] in ["off", "on"]:
+                self.log_write(f"[red]Expected 'on' or 'off'.")
+        
+            self.click_pos_enabled = args[0] == "on"
+
+        self.log_write(f"Click pos mode is currently : {'enabled' if self.click_pos_enabled else 'disabled'}.")
+        return
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
@@ -229,7 +242,7 @@ class FractalisticApp(App):
                 funct=self.command_capture, 
                 help="Take a high quality screenshot",
                 accepted_arg_counts=[0, 2], 
-                extra_help="[green]Usage : capture \\[width] \\[height].[/green]\nIf no width and height are specified, the command line settings are used."
+                extra_help="[green]Usage : \\[width] \\[height]\nUsage : no args[/green]\nIf no width and height are specified, the command line settings are used."
             ),
             "pos": Command(
                 funct=self.command_goto,
@@ -237,11 +250,17 @@ class FractalisticApp(App):
                 accepted_arg_counts=[0, 2],
                 extra_help="[green]Usage : \\[real] \\[imag]\nUsage : no args[/green]\nIf no arguments are given, just print out the current position. Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats."
             ),
+            "click_pos": Command(
+                funct=self.command_click_pos,
+                help="If enabled, set the current position to the position of RIGHT mouse clicks on the canvas.",
+                accepted_arg_counts=[0, 1],
+                extra_help="[green]Usage : on/off\nUsage : no args[/green]\nIf no argument is given, print out the current state. Else, enable or disable click_pos mode."
+            ),
             "capture_fit": Command(
                 funct=self.command_capture_fit, 
                 help="Take a high quality screenshot that fits the size of the canvas.",
                 accepted_arg_counts=[0, 1], 
-                extra_help="[green]Usage : capture_fit \\[quality].[/green]\nIf no quality is specified, the command line settings are used."
+                extra_help="[green]Usage : \\[quality]\nUsage : no arg.[/green]\nIf no quality is specified, the command line settings are used."
             ),
             "version": Command(self.command_version, "Show the version number", [0]),
             "clear": Command(self.command_clear, "Clear the log panel", [0]),
@@ -627,20 +646,28 @@ class FractalisticApp(App):
     def on_click(self, event: Click):
         if not self.ready:
             return
-            
+        # Right clicks
         if event.button == 3:
-            self.marker_pos = Vec(event.x-2, event.y * 2 - (3 if event.button == 1 else 2))
-            c_num = self.pos_to_c(self.marker_pos)
-            divergence = self.get_divergence(c_num)
-
-            self.log_write([
-                f"[on red] Click info ",
-                f"Clicked at (c): {c_num:.4f}",
-                f"Clicked at (pos): {self.marker_pos}",
-                f"Divergence: {divergence}",
-            ])
+            click_pos = Vec(event.x, event.y * 2 - 1)
+            c_num = self.pos_to_c(click_pos)
 
 
+            if self.click_pos_enabled:
+                self.screen_pos_on_plane = c_num
+                self.update_canv()
+                return
+            else:
+                self.marker_pos = click_pos
+                divergence = self.get_divergence(c_num)
+
+                self.log_write([
+                    f"[on red] Click info ",
+                    f"Clicked at (c): {c_num:.4f}",
+                    f"Clicked at (pos): {self.marker_pos}",
+                    f"Divergence: {divergence}",
+                ])
+
+        # [OTHER CLICKS]
         elif event.button == 1 and self.selected_fractal.__name__ == "Julia":
             # Hide the marker since the fractal has changed
             self.marker_pos = None

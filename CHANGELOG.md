@@ -7,9 +7,10 @@
 - Value control commands without args now print out the current value
 - `zoom_lvl` command
 - `pos` command
+- `click_pos` command
 
 # Fixed
-- Some errors in help messages
+- Some errors in help messages, and better formating
 
 # 0.3.1 - 2023-11-06
 
