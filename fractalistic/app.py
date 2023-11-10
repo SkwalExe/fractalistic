@@ -43,8 +43,8 @@ class FractalisticApp(App):
     move_distance: int = 10
     """How many cells far should we move when an arrow key is pressed"""
 
-    zoom_intensity: float = .2
-    """How much should we zoom/unzoom"""
+    zoom_intensity: int = 20
+    """How much should we zoom/unzoom in percentage"""
 
     last_render_time: float = 0
     """How long did it take to render the last frame"""
@@ -173,7 +173,11 @@ class FractalisticApp(App):
         self.log_write(f"max_iter set to [blue]{self.max_iter}")
         self.update_canv()
 
-            
+    
+    def command_zoom_lvl(self, value: int):
+        self.zoom_intensity = value
+        self.log_write(f"Zoom level set to [blue]{self.zoom_intensity}%")
+
     def command_move_dist(self, value: int):
         self.move_distance = value
         self.log_write(f"Move distance set to [blue]{self.move_distance}")
@@ -193,6 +197,13 @@ class FractalisticApp(App):
                 help="Change the distance to move when a key is pressed, in canvas cells.",
                 app_attribute="move_distance",
                 min_value=1
+            ),
+            "zoom_lvl": CommandIncrement(
+                funct=self.command_zoom_lvl,
+                help="Change the zoom factor (intensity) when s or d is pressed, in percent.",
+                app_attribute="zoom_intensity",
+                min_value=1,
+                max_value=100
             ),
             "capture": Command(
                 funct=self.command_capture, 
@@ -238,8 +249,10 @@ class FractalisticApp(App):
         if not direction in ["in", "out"]:
             raise ValueError("zoom direction must be 'in' or 'out'")
         
-        self.cell_size *= 1 + self.zoom_intensity * (1 if direction == "out" else -1)
-
+        # 101 to avoid doind 1-1 and making a 0 zoom factor which would cause a div0 error
+        zoom_factor = 1 - self.zoom_intensity / 101
+        self.cell_size *= zoom_factor if direction == "in" else 1/zoom_factor
+        
         self.update_canv()
 
     def action_next_color(self):

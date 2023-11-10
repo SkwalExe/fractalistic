@@ -32,7 +32,8 @@ class CommandIncrement(Command):
             extra_help=cleandoc(
                 """
                 [green]Usage : +/- \\[value].
-                Usage : \\[value].[/green]
+                Usage : \\[value].
+                Usage : no args.[/green]
                 - If no arguments are passed, the current value is printed out.
                 - If no sign is specified but an argument is provided, the value is set to the one specified.
                 - If a sign is specified, the value is incremented or decremented by the second argument.\
