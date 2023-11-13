@@ -1,11 +1,12 @@
 import os
+from typing import Any
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Vec():
-    x: float | int
-    y: float | int
-    def __init__(self, x: float, y: float):
+    x: Any
+    y: Any
+    def __init__(self, x: Any, y: Any):
         self.x = x
         self.y = y
 
