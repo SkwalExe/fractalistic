@@ -22,6 +22,7 @@ from typing import Any, Callable
 from rich.rule import Rule
 from time import monotonic, sleep, time
 from gmpy2 import mpc, digits, mpfr
+import gmpy2
 #####################
 
 class FractalisticApp(App):
@@ -106,7 +107,6 @@ class FractalisticApp(App):
 
     first_resize: bool = False
     """If the first resize event was already fired"""
-
     ####### COMMANDS ###########
     def command_help(self, args):
         if len(args) == 0:
@@ -215,6 +215,12 @@ class FractalisticApp(App):
         self.log_write(f"Click pos mode is currently : {'enabled' if self.click_pos_enabled else 'disabled'}.")
         return
 
+    def command_precision(self, value: int):
+        self.precision = value
+
+        self.log_write(f"Numeric precision set to [blue]{value}")
+        self.update_canv()
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
@@ -230,6 +236,12 @@ class FractalisticApp(App):
                 help="Change the distance to move when a key is pressed, in canvas cells.",
                 app_attribute="move_distance",
                 min_value=1
+            ),
+            "precision": CommandIncrement(
+                funct=self.command_precision,
+                help="Fine-tune numeric precision by specifying the desired bit length for numeric values",
+                app_attribute="precision",
+                min_value=5
             ),
             "zoom_lvl": CommandIncrement(
                 funct=self.command_zoom_lvl,
@@ -267,7 +279,6 @@ class FractalisticApp(App):
             "quit": Command(self.command_quit, "Exit the app", [0]),
             "help": Command(self.command_help, "Show the help message", [0, 1])
         }
-
     ####### ACTIONS ###########
     def action_cancel_screenshot(self):
         self.cancel_screenshot = True
@@ -333,6 +344,7 @@ class FractalisticApp(App):
         asyncio.get_event_loop().run_in_executor(None, self.action_screenshot_2, (screenshot_size))
 
     def action_screenshot_2(self, screenshot_size: Vec | None):
+        self.precision = self.options["numeric_precision"]
         self.ready = False
 
         # Dynamically bind the escape key to the cancel_screenshot action
@@ -417,11 +429,7 @@ class FractalisticApp(App):
         if not self.ready:
             return
 
-        # remove the marker
-        self.marker_pos = None
-
-        self.cell_size = 4 / self.canv_size.x
-        self.screen_pos_on_plane = mpc(0, 0)
+        self.reset_position()
         self.update_canv()
 
     @on(Input.Submitted, "Input")
@@ -446,6 +454,13 @@ class FractalisticApp(App):
 
     ####### UTILS ########
 
+    def reset_position(self):
+        # remove the marker
+        self.marker_pos = None
+
+        self.cell_size = 4 / self.canv_size.x
+        self.screen_pos_on_plane = mpc(0, 0)
+
     # Map app.max_iter to map.options['max_iter']
     @property
     def max_iter(self):
@@ -454,6 +469,15 @@ class FractalisticApp(App):
     @max_iter.setter
     def max_iter(self, value):
         self.options['max_iter'] = value
+
+    @property
+    def precision(self):
+        return gmpy2.get_context().precision
+
+    @precision.setter
+    def precision(self, value):
+        gmpy2.get_context().precision = value
+        self.options["numeric_precision"] = value
 
     def get_command(self, name: str) -> Command:
         if not name in self.command_list:
@@ -555,9 +579,11 @@ class FractalisticApp(App):
         if screen_pos_on_plane is None:
             screen_pos_on_plane = self.screen_pos_on_plane
 
-
-        return mpc((pos.x - self.canv_size.x//2) * cell_size, (pos.y - self.canv_size.y // 2) * -cell_size) + screen_pos_on_plane
-
+        result_real = (pos.x - self.canv_size.x//2) * cell_size
+        result_imag = (pos.y - self.canv_size.y//2) * -cell_size 
+        result = mpc(result_real, result_imag) + screen_pos_on_plane
+         
+        return result
     def set_canv_size(self):
         """
         update self.canv_size
@@ -581,7 +607,7 @@ class FractalisticApp(App):
         await self.canv.remove()
 
         # And create a new one
-        self.canv = FractalCanv(self.canv_size.x, self.canv_size.y)
+        self.canv = FractalCanv(int(self.canv_size.x), int(self.canv_size.y))
 
         await self.container.mount(self.canv, before=self.right_container)
         
@@ -594,8 +620,10 @@ class FractalisticApp(App):
     def update_canv(self):
         self.ready = False
         asyncio.get_event_loop().run_in_executor(None, self.update_canv_)
-        
+
     def update_canv_(self):
+        self.precision = self.options["numeric_precision"]
+
         self.renders += 1
         start = monotonic()
 
@@ -629,7 +657,7 @@ class FractalisticApp(App):
                     self.canv.set_pixel(x, y, color)
 
         self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
-        self.current_zoom_level = f"{mpfr('4') / (self.cell_size * self.canv_size.x):.4e}"
+        self.current_zoom_level = f"{4 / (self.cell_size * self.canv_size.x):.4e}"
         self.last_render_time = monotonic() - start
 
         self.update_border_info()
@@ -638,7 +666,6 @@ class FractalisticApp(App):
     def update_border_info(self):
         self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} pts | {self.renders} rndrs"
         self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.options['max_iter']} iter"
-    
    
     
     ####### TEXTUAL APP METHODS ########
@@ -662,7 +689,7 @@ class FractalisticApp(App):
 
                 self.log_write([
                     f"[on red] Click info ",
-                    f"Clicked at (c): {c_num:.4f}",
+                    f"Clicked at (c): {digits(c_num)}",
                     f"Clicked at (pos): {self.marker_pos}",
                     f"Divergence: {divergence}",
                 ])
@@ -710,10 +737,11 @@ class FractalisticApp(App):
         self.call_after_refresh(self.on_ready_)
     
     def on_ready_(self):
+        self.precision = self.options['numeric_precision']
         self.set_canv_size()
 
         self.ready = True
-        self.action_reset()
+        self.reset_position()
 
         self.canv.focus()
         
@@ -729,7 +757,6 @@ class FractalisticApp(App):
         self.on_resize()
 
     def on_resize(self, event = None) -> None:
-        
         if not self.first_resize:
             self.first_resize = True
             return

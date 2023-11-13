@@ -34,9 +34,6 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
         print(__version__)
         quit()
 
-    # Set gmpy2 decimal precision
-    gmpy2.set_context(gmpy2.context(precision=decimal_precision))
-    
     app = FractalisticApp()
 
     # Set default fractal
@@ -51,8 +48,8 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
         "size": None if size is None else Vec(size[0], size[1]),
         "max_iter": max_iter,
         "debug": debug,
+        "numeric_precision": decimal_precision
     }
-
     app.run()
 
 if __name__ == "__main__":

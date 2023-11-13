@@ -1,4 +1,10 @@
-# 0.5.0 - Unreleased
+# 0.5.0 - 2023-11-13
+
+### Added
+- `precision` command
+
+### Fixed
+- Fixed #17 - Custom numeric precision not taken into account
 
 # 0.4.0 - 2023-11-10
 
