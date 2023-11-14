@@ -23,6 +23,7 @@ from rich.rule import Rule
 from time import monotonic, sleep, time
 from gmpy2 import mpc, digits, mpfr
 import gmpy2
+import toml
 #####################
 
 class FractalisticApp(App):
@@ -221,6 +222,21 @@ class FractalisticApp(App):
         self.log_write(f"Numeric precision set to [blue]{value}")
         self.update_canv()
 
+    def command_save_state(self, args):
+        if len(args) == 0:
+            filename = f"{self.selected_fractal.__name__}_state_{int(time())}.toml"
+        else:
+            filename = args[0]
+
+        try:
+            with open(filename, "w") as f:
+                f.write(toml.dumps(self.get_state()))
+        except OSError as e:
+            self.log_write(f"Cannot write to file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
+            return
+
+        self.log_write(f"State saved to [blue]{filename}")
+
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
     def set_command_list(self):
@@ -273,6 +289,12 @@ class FractalisticApp(App):
                 help="Take a high quality screenshot that fits the size of the canvas.",
                 accepted_arg_counts=[0, 1], 
                 extra_help="[green]Usage : \\[quality]\nUsage : no arg.[/green]\nIf no quality is specified, the command line settings are used."
+            ),
+            "save_state": Command(
+                funct=self.command_save_state,
+                help="Save the current state of the app to a file (current fractal, color, position, zoom, etc).",
+                accepted_arg_counts=[0, 1],
+                extra_help="[green]Usage : \\[filename]\nUsage : no args[/green]\nIf no filename is specified, one will be generated automatically."
             ),
             "version": Command(self.command_version, "Show the version number", [0]),
             "clear": Command(self.command_clear, "Clear the log panel", [0]),
@@ -453,6 +475,20 @@ class FractalisticApp(App):
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
 
     ####### UTILS ########
+
+    def get_state(self):
+        return {
+            "fractal": self.selected_fractal.__name__,
+            "color": self.selected_color.__name__,
+            "max_iter": str(self.max_iter),
+            "precision": str(self.precision),
+            "cell_size": self.cell_size.__format__(".2048g"),
+            "screen_pos_on_plane_real": self.screen_pos_on_plane.real.__format__(".2048g"),
+            "screen_pos_on_plane_imag": self.screen_pos_on_plane.imag.__format__(".2048g"),
+            "julia_click_real": self.julia_click.real.__format__(".2048g"),
+            "julia_click_imag": self.julia_click.imag.__format__(".2048g"),
+            "version": __version__,
+        }
 
     def reset_position(self):
         # remove the marker
