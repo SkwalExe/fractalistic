@@ -108,7 +108,9 @@ class FractalisticApp(App):
 
     first_resize: bool = False
     """If the first resize event was already fired"""
+    
     ####### COMMANDS ###########
+
     def command_help(self, args):
         if len(args) == 0:
             command_desc = [f"- [blue]{name}[/blue]: {self.command_list[name].help}" for name in self.command_list]
@@ -180,7 +182,6 @@ class FractalisticApp(App):
         self.log_write(f"max_iter set to [blue]{self.max_iter}")
         self.update_canv()
 
-    
     def command_zoom_lvl(self, value: int):
         self.zoom_intensity = value
         self.log_write(f"Zoom level set to [blue]{self.zoom_intensity}%")
@@ -236,6 +237,10 @@ class FractalisticApp(App):
             return
 
         self.log_write(f"State saved to [blue]{filename}")
+
+    def command_load_state(self, args):
+        self.load_state(args[0])
+        self.update_canv()
 
     # Cannot set command_list directly because for some obscure
     # reason the quit command doesn't work if you do so
@@ -295,6 +300,12 @@ class FractalisticApp(App):
                 help="Save the current state of the app to a file (current fractal, color, position, zoom, etc).",
                 accepted_arg_counts=[0, 1],
                 extra_help="[green]Usage : \\[filename]\nUsage : no args[/green]\nIf no filename is specified, one will be generated automatically."
+            ),
+            "load_state": Command(
+                funct=self.command_load_state,
+                help="Load a state from a file.",
+                accepted_arg_counts=[1],
+                extra_help="[green]Usage : \\[filename][/green]"
             ),
             "version": Command(self.command_version, "Show the version number", [0]),
             "clear": Command(self.command_clear, "Clear the log panel", [0]),
@@ -464,8 +475,6 @@ class FractalisticApp(App):
 
         self.parse_command(command)
 
-
-
     ###### TEXTUAL APP VARS ######
 
     BINDINGS = [
@@ -475,6 +484,39 @@ class FractalisticApp(App):
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
 
     ####### UTILS ########
+
+    def load_state(self, filename: str):
+        try:
+            with open(filename, "r") as f:
+                try:
+                    state = toml.loads(f.read())
+
+                except toml.TomlDecodeError as e:
+                    self.log_write(f"Cannot decode file '{filename}'. [red]{e}")
+                    return
+
+        except OSError as e:
+            self.log_write(f"Cannot read file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
+            return
+        
+        try:
+            self.fractal_index = get_fractal_index_from_name(state["fractal"])
+            self.color_renderer_index = get_color_index_from_name(state["color"])
+            self.max_iter = int(state["max_iter"])
+            self.precision = int(state["precision"])
+            self.cell_size = mpfr(state["cell_size"])
+            screen_pos_on_plane_real = mpfr(state["screen_pos_on_plane_real"])
+            screen_pos_on_plane_imag = mpfr(state["screen_pos_on_plane_imag"])
+            self.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
+            julia_click_real = mpfr(state["julia_click_real"])
+            julia_click_imag = mpfr(state["julia_click_imag"])
+            self.julia_click = mpc(julia_click_real, julia_click_imag)
+
+        except KeyError as e:
+            self.log_write(f"Cannot load state from file '{filename}'. [red]Missing key: {e}")
+            return
+
+        self.log_write(f"State loaded from [blue]{filename}[/blue]")
 
     def get_state(self):
         return {
@@ -756,7 +798,6 @@ class FractalisticApp(App):
 
         self.command_input.border_title = "Command Input"
         self.rich_log.border_title = "Logs Panel"
-
 
     async def on_ready(self):
         # Mount the log panel and the command input in the right container
