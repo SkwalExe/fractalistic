@@ -399,7 +399,7 @@ class FractalisticApp(App):
                 break
             
             for x in range(screenshot_width):
-                c_num = self.pos_to_c(Vec(x, y), pixel_size)
+                c_num = self.pos_to_c(Vec(x, y), pixel_size, screen_size=screenshot_size)
                 result = self.get_divergence(c_num)
 
                 # Get a color from the result
@@ -607,7 +607,7 @@ class FractalisticApp(App):
         return self.selected_fractal.get(query_config)
 
     
-    def pos_to_c(self, pos: Vec, cell_size = None, screen_pos_on_plane = None) -> mpc:
+    def pos_to_c(self, pos: Vec, cell_size = None, screen_pos_on_plane = None, screen_size: Vec | None = None) -> mpc:
         """Takes a position (x, y) of the canvas and converts it into the corresponding complex number on the plane"""
         if cell_size is None:
             cell_size = self.cell_size
@@ -615,8 +615,11 @@ class FractalisticApp(App):
         if screen_pos_on_plane is None:
             screen_pos_on_plane = self.screen_pos_on_plane
 
-        result_real = (pos.x - self.canv_size.x//2) * cell_size
-        result_imag = (pos.y - self.canv_size.y//2) * -cell_size 
+        if screen_size is None:
+            screen_size = self.canv_size
+
+        result_real = (pos.x - screen_size.x//2) * cell_size
+        result_imag = (pos.y - screen_size.y//2) * -cell_size 
         result = mpc(result_real, result_imag) + screen_pos_on_plane
          
         return result

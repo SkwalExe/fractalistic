@@ -3,6 +3,9 @@
 ### Added
 - Load and save state commands
 
+### Fixed
+- #30 screenshots wrongly centered
+
 # 0.5.0 - 2023-11-13
 
 ### Added
