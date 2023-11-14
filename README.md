@@ -60,14 +60,12 @@ fractalistic
 # Roadmap
 
 Possible features to add later:
-- [ ] Allow use of builtin floats instead of gmpy2 for faster rendering 
 - [ ] Splash screen
 - [ ] Custom mandelbrot/burning ship starting value or exponent
 - [ ] app.log_error(), etc utility functions
 
 Commands:
 - [ ] Command to show current pos, zoom, etc
-- [ ] Command to set decimal precision
 - [ ] Command to save position to file
 - [ ] Command to load position from a file
 

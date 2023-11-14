@@ -17,7 +17,8 @@ dependencies = [
     "gmpy2==2.1.5",
     "pillow==10.0.1",
     "asyncio==3.4.3",
-    "textual_canvas==0.2.0"
+    "textual_canvas==0.2.0",
+    "toml==0.10.2"
 ]
 
 [project.urls]

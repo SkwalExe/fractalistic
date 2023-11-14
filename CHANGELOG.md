@@ -1,3 +1,8 @@
+# 0.6.0 - Unreleased
+
+### Added
+- Load and save state commands
+
 # 0.5.0 - 2023-11-13
 
 ### Added
