@@ -3,7 +3,7 @@
 
 ###### Click Extra
 from click_extra import extra_command, option
-from click_extra import IntRange, Choice
+from click_extra import IntRange, Choice, STRING
 ###### Local imports
 from .utils import *
 from .app import FractalisticApp
@@ -18,6 +18,7 @@ import gmpy2
 
 
 @extra_command(params=[])
+@option("-ls", "--load-state", help="Load state from a file", type=STRING)
 @option("-df", "--default-fractal", help="Default fractal to show when starting the program.", type=Choice([frac.__name__ for frac in fractal_list], False), default="Mandelbrot")
 @option("-dc", "--default-color", help="Default color to use when starting the program.", type=Choice([color.__name__ for color in color_renderers], False), default="blue_brown")
 @option("-p", "--decimal-precision", help="Fine-tune numeric precision by specifying the desired bit length for numeric values", type=IntRange(5), default=64)
@@ -27,7 +28,7 @@ import gmpy2
 @option("-q", "--quality", help="Only when using --fit, set the quality of screenshots by multiplying the original size in the terminal by the specified scaling factor.", type=IntRange(1), default=20)
 @option("-v", "--version", help="Show version number and exit", is_flag=True)
 @option("--debug", help="Enable debug mode for developers.", is_flag=True)
-def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str, default_color: str, debug: bool, decimal_precision: int, max_iter: int, version: bool):
+def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str, default_color: str, debug: bool, decimal_precision: int, max_iter: int, version: bool, load_state: str):
 
     # If -v or --version is used, show version and exit
     if version:
@@ -37,10 +38,10 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
     app = FractalisticApp()
 
     # Set default fractal
-    app.fractal_index = {frac.__name__: i for i, frac in enumerate(fractal_list)}[default_fractal]
+    app.fractal_index = get_fractal_index_from_name(default_fractal)
     
     # Set default color
-    app.color_renderer_index = {color.__name__: i for i, color in enumerate(color_renderers)}[default_color]
+    app.color_renderer_index = get_color_index_from_name(default_color)
 
     app.options = {
         "fit_screenshots": fit,
@@ -48,7 +49,8 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
         "size": None if size is None else Vec(size[0], size[1]),
         "max_iter": max_iter,
         "debug": debug,
-        "numeric_precision": decimal_precision
+        "numeric_precision": decimal_precision,
+        "state_file": load_state
     }
     app.run()
 

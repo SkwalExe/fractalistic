@@ -2,6 +2,7 @@
 
 ### Added
 - Load and save state commands
+- `-ls` option
 
 ### Fixed
 - #30 screenshots wrongly centered
