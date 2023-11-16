@@ -63,14 +63,10 @@ Possible features to add later:
 - [ ] Splash screen
 - [ ] Custom mandelbrot/burning ship starting value or exponent
 - [ ] app.log_error(), etc utility functions
+- [ ] New mandelbrot variants
 
 Commands:
 - [ ] Command to show current pos, zoom, etc
-- [ ] Command to save position to file
-- [ ] Command to load position from a file
-
-Command line options :
-- [ ] Load fractal, position, and zoom from a file
 
 # Development 
 

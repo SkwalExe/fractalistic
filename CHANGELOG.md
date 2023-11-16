@@ -1,8 +1,8 @@
-# 0.6.0 - Unreleased
+# 0.6.0 - 2023-11-16
 
 ### Added
 - Load and save state commands
-- `-ls` option
+- `-ls/--load-state` option
 
 ### Fixed
 - #30 screenshots wrongly centered
