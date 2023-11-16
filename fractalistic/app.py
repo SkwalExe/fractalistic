@@ -817,6 +817,8 @@ class FractalisticApp(App):
         self.call_after_refresh(self.on_ready_)
     
     def on_ready_(self):
+        
+
         self.precision = self.options['numeric_precision']
         self.set_canv_size()
 
@@ -834,6 +836,9 @@ class FractalisticApp(App):
         self.log_write(f"If you are experiencing slow rendering, try to reduce the size of your terminal.")
         self.log_write(f"You can change focus between the canvas, the log panel and the command input using [blue]tab[/blue] or [blue]with your mouse[/blue].")
 
+        if not self.options['state_file'] is None: 
+            self.log_write("[red]-ls option is still under development")
+        
         self.on_resize()
 
     def on_resize(self, event = None) -> None:
