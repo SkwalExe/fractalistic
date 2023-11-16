@@ -837,7 +837,7 @@ class FractalisticApp(App):
         self.log_write(f"You can change focus between the canvas, the log panel and the command input using [blue]tab[/blue] or [blue]with your mouse[/blue].")
 
         if not self.options['state_file'] is None: 
-            self.log_write("[red]-ls option is still under development")
+            self.load_state(self.options['state_file'])
         
         self.on_resize()
 
