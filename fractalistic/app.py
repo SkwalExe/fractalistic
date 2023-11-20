@@ -10,6 +10,7 @@ from textual import on
 from . import fractals
 from .utils import *
 from . import colors
+from .vec import Vec
 from . import __version__
 from .query_config import QueryConfig
 from .command import Command, CommandIncrement, CommandIncrementArgParseResult
@@ -19,6 +20,7 @@ import os
 from PIL import Image
 import asyncio
 from typing import Any, Callable
+from multiprocessing import Process, Pool
 from rich.rule import Rule
 from time import monotonic, sleep, time
 from gmpy2 import mpc, digits, mpfr
@@ -660,11 +662,8 @@ class FractalisticApp(App):
         if screen_size is None:
             screen_size = self.canv_size
 
-        result_real = (pos.x - screen_size.x//2) * cell_size
-        result_imag = (pos.y - screen_size.y//2) * -cell_size 
-        result = mpc(result_real, result_imag) + screen_pos_on_plane
-         
-        return result
+        return pos_to_c(pos, cell_size, screen_pos_on_plane, screen_size)
+    
     def set_canv_size(self):
         """
         update self.canv_size
@@ -743,6 +742,7 @@ class FractalisticApp(App):
 
         self.update_border_info()
         self.ready = True
+    
 
     def update_border_info(self):
         self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} pts | {self.renders} rndrs"

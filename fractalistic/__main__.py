@@ -9,6 +9,7 @@ from .utils import *
 from .app import FractalisticApp
 from . import __version__
 from .colors import color_renderers
+from .vec import Vec
 from .fractals import fractal_list
 ###### Others
 import gmpy2
