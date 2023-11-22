@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from ..query_config import QueryConfig
+from gmpy2 import mpc
+from ..settings import RenderSettings
 
 class FractalBase(ABC):
     """Base class for fractals."""
@@ -8,7 +9,7 @@ class FractalBase(ABC):
 
     @staticmethod
     @abstractmethod
-    def get(config: QueryConfig) -> int:
+    def get(point: mpc, settings: RenderSettings) -> int:
         """Returns the number of iterations required to classify a point as convergent (or -1 if it diverges)."""
         pass
 

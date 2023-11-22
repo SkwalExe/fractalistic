@@ -3,7 +3,11 @@ from typing import Any
 from .fractals import *
 from .colors import *
 from .vec import Vec
+from textual import log
+from .settings import RenderSettings
+from multiprocessing import Queue
 from gmpy2 import mpc
+import gmpy2
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,4 +23,22 @@ def pos_to_c(pos: Vec, cell_size, screen_pos_on_plane, screen_size) -> mpc:
     result_imag = (pos.y - screen_size.y//2) * -cell_size 
     result = mpc(result_real, result_imag) + screen_pos_on_plane
         
+    return result
+
+def set_precision(value):
+    gmpy2.get_context().precision = value
+
+def get_divergence_matrix(start: int, stop: int, render_settings: RenderSettings, size: Vec, queue: Queue):
+    set_precision(render_settings.wanted_numeric_precision)
+    lines_to_render = stop - start
+    result = [[0 for x in range(size.x)] for y in range(lines_to_render)]
+    pos_on_plane = render_settings.screen_pos_on_plane
+
+    for y in range(lines_to_render):
+        for x in range(size.x):
+            pos = Vec(x, y+start)
+            c_num = pos_to_c(pos, render_settings.cell_size, pos_on_plane, size)
+            result[y][x] = fractal_list[render_settings.fractal_index].get(c_num, render_settings)
+        queue.put(None)
+
     return result
