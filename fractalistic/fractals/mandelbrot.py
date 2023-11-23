@@ -1,5 +1,5 @@
 from gmpy2 import mpc
-from ..query_config import QueryConfig
+from ..settings import RenderSettings
 from .fractal_base import FractalBase
 
 class Mandelbrot(FractalBase):
@@ -10,14 +10,14 @@ class Mandelbrot(FractalBase):
     message = None
 
     @staticmethod
-    def get(config: QueryConfig) -> int:
+    def get(point: mpc, settings: RenderSettings) -> int:
         i = 0
         z = mpc(0, 0)
-        while abs(z) < 2 and i < config.max_iter:
-            z = z*z + config.point_in_plane
+        while abs(z) < 2 and i < settings.max_iter:
+            z = z*z + point
             i+=1
 
-        if i == config.max_iter:
+        if i == settings.max_iter:
             return -1
         
         return i

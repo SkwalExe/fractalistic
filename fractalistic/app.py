@@ -10,8 +10,9 @@ from textual import on
 from . import fractals
 from .utils import *
 from . import colors
+from .vec import Vec
+from .settings import Settings, RenderSettings
 from . import __version__
-from .query_config import QueryConfig
 from .command import Command, CommandIncrement, CommandIncrementArgParseResult
 from .fractal_canv import FractalCanv
 ###### Other imports
@@ -19,61 +20,34 @@ import os
 from PIL import Image
 import asyncio
 from typing import Any, Callable
+from multiprocessing import Process, Pool, Queue, Manager
 from rich.rule import Rule
 from time import monotonic, sleep, time
 from gmpy2 import mpc, digits, mpfr
+from copy import deepcopy
 import gmpy2
 import toml
+from math import ceil, floor
+import itertools
 #####################
 
 class FractalisticApp(App):
-    cell_size: mpfr
-    """The height and width of one pixel in the complex plane"""
-
-    screen_pos_on_plane: mpc
-    """The position of the of the canvas in the plane"""
-
-    canv_size: Vec
-    """The number of rows and cols of the canvas"""
+    settings: Settings = Settings()
 
     renders: int = 0
     """The number of times a fractal has been rendered"""
-
-    marker_pos: Vec | None = None
-    """Position of the red marker on the screen"""
-
-    move_distance: int = 10
-    """How many cells far should we move when an arrow key is pressed"""
-
-    zoom_intensity: int = 20
-    """How much should we zoom/unzoom in percentage"""
-
+    
     last_render_time: float = 0
     """How long did it take to render the last frame"""
-
-    color_renderer_index: int = 0
-    """Index of the current color renderer"""
-
-    fractal_index: int = 0
-    """Index of the current fractal"""
-
+    
     ready: bool = False
     """Whether we should listen to events or not"""
 
     logs: list = []
     """List of log messages"""
 
-    options: dict[str, Any]
-    """Options set by main.py corresponding to the command line arguments"""
-
-    julia_click: mpc = mpc(1, 0)
-    """The complex number corresponding to the Julia set to show when a point is clicked on the canvas"""
-
     print_log_bar: bool = False
     """If we should print a log bar before showing the message in the log panel"""
-
-    command_list: dict[str, Command]
-    """List of commands"""
 
     average_divergence: float = 0
     """Average divergence of the current canvas render"""
@@ -83,9 +57,10 @@ class FractalisticApp(App):
 
     current_zoom_level: str = "1"
     """[NOT REACTIVE], current zoom level, updated at each render and used to show the zoom level in the cavas border subtitle"""
+   
+    command_list: dict[str, Command | CommandIncrement]
 
-    click_pos_enabled: bool = False
-    """Set the canvas position to the next click position"""
+    current_process_pool = None
 
     ###### DOM ELEMENTS #####
     container: Static = Static(id="container")
@@ -177,22 +152,22 @@ class FractalisticApp(App):
 
     def command_max_iter(self, value: int):
                 
-        self.max_iter = value
+        self.render_settings.max_iter = value
 
-        self.log_write(f"max_iter set to [blue]{self.max_iter}")
+        self.log_write(f"max_iter set to [blue]{self.render_settings.max_iter}")
         self.update_canv()
 
     def command_zoom_lvl(self, value: int):
-        self.zoom_intensity = value
-        self.log_write(f"Zoom level set to [blue]{self.zoom_intensity}%")
+        self.settings.zoom_intensity = value
+        self.log_write(f"Zoom level set to [blue]{self.settings.zoom_intensity}%")
 
     def command_move_dist(self, value: int):
-        self.move_distance = value
-        self.log_write(f"Move distance set to [blue]{self.move_distance}")
+        self.settings.move_distance = value
+        self.log_write(f"Move distance set to [blue]{self.settings.move_distance}")
 
     def command_goto(self, args):
         if len(args) == 0:
-            self.log_write(f"Current position: [blue]{self.screen_pos_on_plane.real}+{self.screen_pos_on_plane.imag}i")
+            self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane.real}+{self.render_settings.screen_pos_on_plane.imag}i")
             return
 
         real = None
@@ -204,7 +179,7 @@ class FractalisticApp(App):
             self.log_write("Real and imaginary parts must be valid integers or floats")
             return
 
-        self.screen_pos_on_plane = mpc(real, imag)
+        self.render_settings.screen_pos_on_plane = mpc(real, imag)
         self.update_canv()
 
     def command_click_pos(self, args):
@@ -212,9 +187,9 @@ class FractalisticApp(App):
             if not args[0] in ["off", "on"]:
                 self.log_write(f"[red]Expected 'on' or 'off'.")
         
-            self.click_pos_enabled = args[0] == "on"
+            self.settings.click_pos_enabled = args[0] == "on"
 
-        self.log_write(f"Click pos mode is currently : {'enabled' if self.click_pos_enabled else 'disabled'}.")
+        self.log_write(f"Click pos mode is currently : {'enabled' if self.settings.click_pos_enabled else 'disabled'}.")
         return
 
     def command_precision(self, value: int):
@@ -242,20 +217,27 @@ class FractalisticApp(App):
         self.load_state(args[0])
         self.update_canv()
 
-    # Cannot set command_list directly because for some obscure
-    # reason the quit command doesn't work if you do so
+    def command_threads(self, value: int):
+        self.settings.threads = value
+        self.log_write(f"Rendering thread count set to [blue]{self.settings.threads}")
+
+    def command_screenshot_threads(self, value: int):
+        self.settings.screenshot_threads = value
+        self.log_write(f"Screensdhot thread count set to [blue]{self.settings.threads}")
+
+    # We cant directly set command_list because we couldn't reference command methods correctly
     def set_command_list(self):
         self.command_list = {
             "max_iter": CommandIncrement(
                 funct=self.command_max_iter,
                 help="Change the maximum number of iterations used to determine if a point converges or not.",
-                app_attribute="max_iter",
+                app_attribute="settings.render_settings.max_iter",
                 min_value=6,
             ),
             "move_dist": CommandIncrement(
                 funct=self.command_move_dist,
                 help="Change the distance to move when a key is pressed, in canvas cells.",
-                app_attribute="move_distance",
+                app_attribute="settings.move_distance",
                 min_value=1
             ),
             "precision": CommandIncrement(
@@ -264,10 +246,22 @@ class FractalisticApp(App):
                 app_attribute="precision",
                 min_value=5
             ),
+            "threads": CommandIncrement(
+                funct=self.command_threads,
+                help="Change the number of threads used for rendering",
+                app_attribute="settings.threads",
+                min_value=1
+            ),
+            "screenshot_threads": CommandIncrement(
+                funct=self.command_screenshot_threads,
+                help="Change the number of threads used for rendering screenshots",
+                app_attribute="settings.screenshot_threads",
+                min_value=1
+            ),
             "zoom_lvl": CommandIncrement(
                 funct=self.command_zoom_lvl,
                 help="Change the zoom factor (intensity) when s or d is pressed, in percent.",
-                app_attribute="zoom_intensity",
+                app_attribute="settings.zoom_intensity",
                 min_value=1,
                 max_value=100
             ),
@@ -312,6 +306,7 @@ class FractalisticApp(App):
             "quit": Command(self.command_quit, "Exit the app", [0]),
             "help": Command(self.command_help, "Show the help message", [0, 1])
         }
+
     ####### ACTIONS ###########
     def action_cancel_screenshot(self):
         self.cancel_screenshot = True
@@ -323,9 +318,8 @@ class FractalisticApp(App):
             return
 
         # Remove the marker when moving
-        self.marker_pos = None
-
-        self.screen_pos_on_plane += mpc(self.move_distance * self.cell_size * x, self.move_distance * self.cell_size * y)
+        self.remove_marker()
+        self.render_settings.screen_pos_on_plane += mpc(self.settings.move_distance * self.render_settings.cell_size * x, self.settings.move_distance * self.render_settings.cell_size * y)
         self.update_canv()
 
     def action_zoom(self, direction: str):
@@ -333,14 +327,14 @@ class FractalisticApp(App):
             return
 
         # Remove the marker when zooming
-        self.marker_pos = None
+        self.remove_marker()
 
         if not direction in ["in", "out"]:
             raise ValueError("zoom direction must be 'in' or 'out'")
         
         # 101 to avoid doind 1-1 and making a 0 zoom factor which would cause a div0 error
-        zoom_factor = 1 - self.zoom_intensity / 101
-        self.cell_size *= zoom_factor if direction == "in" else 1/zoom_factor
+        zoom_factor = 1 - self.settings.zoom_intensity / 101
+        self.render_settings.cell_size *= zoom_factor if direction == "in" else 1/zoom_factor
         
         self.update_canv()
 
@@ -348,7 +342,7 @@ class FractalisticApp(App):
         if not self.ready:
             return
         
-        self.color_renderer_index = (self.color_renderer_index + 1) % len(colors.color_renderers)
+        self.render_settings.color_renderer_index = (self.render_settings.color_renderer_index + 1) % len(colors.color_renderers)
         self.update_canv()
         self.log_write(f"Now using the [purple]{self.selected_color.__name__}[/purple] color scheme")
 
@@ -357,9 +351,9 @@ class FractalisticApp(App):
             return
         
         # Remove the marker when changing fractal
-        self.marker_pos = None
+        self.remove_marker()
 
-        self.fractal_index = (self.fractal_index + 1) % len(fractals.fractal_list)
+        self.render_settings.fractal_index = (self.render_settings.fractal_index + 1) % len(fractals.fractal_list)
         self.update_canv()
 
         to_write = [f"Now viewing the [purple]{self.selected_fractal.__name__}[/purple] fractal."]
@@ -377,7 +371,6 @@ class FractalisticApp(App):
         asyncio.get_event_loop().run_in_executor(None, self.action_screenshot_2, (screenshot_size))
 
     def action_screenshot_2(self, screenshot_size: Vec | None):
-        self.precision = self.options["numeric_precision"]
         self.ready = False
 
         # Dynamically bind the escape key to the cancel_screenshot action
@@ -400,30 +393,18 @@ class FractalisticApp(App):
 
 
         # The size in the complex plane, of a pixel of the screenshot
-        pixel_size = self.canv_size.x * self.cell_size / screenshot_width
-
-
-        for y in range(screenshot_height):
-            
-            # If the screenshot is cancelled, stop generating
-            if self.cancel_screenshot:
-                break
-            
-            for x in range(screenshot_width):
-                c_num = self.pos_to_c(Vec(x, y), pixel_size, screen_size=screenshot_size)
-                result = self.get_divergence(c_num)
-
-                # Get a color from the result
-                color = Color.parse("black") if result == -1 else self.selected_color(result)
-                image.putpixel((x, y), color.rgb)
-
-            if y % 10 == 0:
-                # Make the progress bar advance every 10 rows
-                self.progress_bar.advance()
-
+        pixel_size = self.settings.canv_size.x * self.render_settings.cell_size / screenshot_width
+        result = self.get_divergence_matrix(cell_size=pixel_size, size=screenshot_size, update_loading_bar=True, threads=self.settings.screenshot_threads)
+        
+        # If the screenshot was cancelled, None is returned
         # If the screenshot wasn't cancelled, save the screenshot to a file, put a message in the log panel
         # And wait one second to allow the user to see that the operation is finished successfully.
         if not self.cancel_screenshot:
+            for (y, line) in enumerate(result):
+                for (x, divergence) in enumerate(line):
+                    # Get a color from the result
+                    color = Color.parse("black") if divergence == -1 else self.selected_color(divergence)
+                    image.putpixel((x, y), color.rgb)
             save_to = f"{self.selected_fractal.__name__}_screenshot_{int(time())}.png"
             image.save(save_to)
             self.call_after_refresh(self.log_write, (f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}[/on violet]"))
@@ -485,6 +466,62 @@ class FractalisticApp(App):
 
     ####### UTILS ########
 
+    def get_divergence_matrix(self, cell_size: mpc | None = None, size: Vec | None = None, threads: int | None = None, update_loading_bar: bool = False):
+        if threads is None:
+            threads = self.settings.threads
+        if cell_size is None:
+            cell_size = self.render_settings.cell_size
+        if size is None:
+            size = self.settings.canv_size
+
+        # Number of lines to render per thread
+        chunk_size = ceil(size.y / threads)
+        # List of tuples (start, end) of the lines to render for each thread
+        # start is inclusive, end is exclusive
+        chunks = [[x * chunk_size, min((x+1) * chunk_size, size.y)] for x in range(0, threads)]
+        
+
+        render_settings = deepcopy(self.render_settings)
+        render_settings.cell_size = cell_size
+
+        manager = Manager()
+        queue = manager.Queue()
+
+        self.current_process_pool = Pool(processes=threads)
+
+        # Start the rendering processes
+        divergence_matrices_async = self.current_process_pool.starmap_async(get_divergence_matrix, [(chunk[0], chunk[1], render_settings, size, queue) for chunk in chunks], chunksize=1)
+        
+        rendered_lines = 0
+        while not divergence_matrices_async.ready():
+
+            # Return None if the screenshot was cancelled, and terminate the processes
+            if self.cancel_screenshot:
+                self.current_process_pool.terminate()
+                return None
+
+            while not queue.empty():
+                rendered_lines += 1
+
+                # A message is added to the queue everytime a line is rendered
+                queue.get()
+
+                # Make the progress bar advance every 10 lines
+                if rendered_lines % 10 == 0:
+                    self.progress_bar.advance()
+
+        # When the rendering is finished, get the result from each process
+        divergence_matrices = divergence_matrices_async.get()
+
+        # Flatten the array of each process result into one big array
+        result = list(itertools.chain.from_iterable(divergence_matrices))
+
+        # Close the pool of processes
+        self.current_process_pool.close()
+        self.current_process_pool = None
+
+        return result
+
     def load_state(self, filename: str):
         try:
             with open(filename, "r") as f:
@@ -500,17 +537,17 @@ class FractalisticApp(App):
             return
         
         try:
-            self.fractal_index = get_fractal_index_from_name(state["fractal"])
-            self.color_renderer_index = get_color_index_from_name(state["color"])
-            self.max_iter = int(state["max_iter"])
-            self.precision = int(state["precision"])
-            self.cell_size = mpfr(state["cell_size"])
+            self.render_settings.fractal_index = get_fractal_index_from_name(state["fractal"])
+            self.render_settings.color_renderer_index = get_color_index_from_name(state["color"])
+            self.render_settings.max_iter = int(state["max_iter"])
+            self.precision = self.render_settings.wanted_numeric_precision
+            self.render_settings.cell_size = mpfr(state["cell_size"])
             screen_pos_on_plane_real = mpfr(state["screen_pos_on_plane_real"])
             screen_pos_on_plane_imag = mpfr(state["screen_pos_on_plane_imag"])
-            self.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
+            self.stetings.render_settings.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
             julia_click_real = mpfr(state["julia_click_real"])
             julia_click_imag = mpfr(state["julia_click_imag"])
-            self.julia_click = mpc(julia_click_real, julia_click_imag)
+            self.render_settings.julia_click = mpc(julia_click_real, julia_click_imag)
 
         except KeyError as e:
             self.log_write(f"Cannot load state from file '{filename}'. [red]Missing key: {e}")
@@ -522,40 +559,35 @@ class FractalisticApp(App):
         return {
             "fractal": self.selected_fractal.__name__,
             "color": self.selected_color.__name__,
-            "max_iter": str(self.max_iter),
-            "precision": str(self.precision),
-            "cell_size": self.cell_size.__format__(".2048g"),
-            "screen_pos_on_plane_real": self.screen_pos_on_plane.real.__format__(".2048g"),
-            "screen_pos_on_plane_imag": self.screen_pos_on_plane.imag.__format__(".2048g"),
-            "julia_click_real": self.julia_click.real.__format__(".2048g"),
-            "julia_click_imag": self.julia_click.imag.__format__(".2048g"),
+            "max_iter": str(self.render_settings.max_iter),
+            "precision": str(self.render_settings.wanted_numeric_precision),
+            "cell_size": self.render_settings.cell_size.__format__(".2048g"),
+            "screen_pos_on_plane_real": self.render_settings.screen_pos_on_plane.real.__format__(".2048g"),
+            "screen_pos_on_plane_imag": self.render_settings.screen_pos_on_plane.imag.__format__(".2048g"),
+            "julia_click_real": self.render_settings.julia_click.real.__format__(".2048g"),
+            "julia_click_imag": self.render_settings.julia_click.imag.__format__(".2048g"),
             "version": __version__,
         }
 
     def reset_position(self):
         # remove the marker
-        self.marker_pos = None
+        self.remove_marker()
 
-        self.cell_size = 4 / self.canv_size.x
-        self.screen_pos_on_plane = mpc(0, 0)
-
-    # Map app.max_iter to map.options['max_iter']
-    @property
-    def max_iter(self):
-        return self.options['max_iter']
-
-    @max_iter.setter
-    def max_iter(self, value):
-        self.options['max_iter'] = value
+        self.render_settings.cell_size = 4 / self.settings.canv_size.x
+        self.render_settings.screen_pos_on_plane = mpc(0, 0)
 
     @property
     def precision(self):
         return gmpy2.get_context().precision
 
+    @property
+    def render_settings(self):
+        return self.settings.render_settings
+
     @precision.setter
     def precision(self, value):
-        gmpy2.get_context().precision = value
-        self.options["numeric_precision"] = value
+        set_precision(value)
+        self.render_settings.wanted_numeric_precision = value
 
     def get_command(self, name: str) -> Command:
         if not name in self.command_list:
@@ -570,19 +602,22 @@ class FractalisticApp(App):
         """
 
         if quality is None:
-            quality = self.options["screenshot_quality"]
+            quality = self.settings.screenshot_quality
 
-        screenshot_width = self.canv_size.x * quality
-        screenshot_height = self.canv_size.y * quality
+        screenshot_width = self.settings.canv_size.x * quality
+        screenshot_height = self.settings.canv_size.y * quality
     
         return Vec(screenshot_width, screenshot_height)
 
 
     def get_screenshot_size_from_options(self, fit_quality: int | None = None):
-        if self.options["fit_screenshots"]:
+        if self.settings.fit_screenshots:
             return self.get_screenshot_size_fit(fit_quality)
     
-        return Vec(self.options["size"].x, self.options["size"].y)
+        return Vec(self.settings.screenshot_size.x, self.settings.screenshot_size.y)
+
+    def remove_marker(self):
+        self.settings.marker_pos = None
 
     def parse_command(self, text: str):
         args = list(filter(lambda x: len(x) > 0, text.split(" ")))
@@ -598,7 +633,10 @@ class FractalisticApp(App):
             return
 
         if isinstance(command, CommandIncrement):
-            current_attribute_value = self.__getattribute__(command.app_attribute)
+            attributes = command.app_attribute.split(".")
+            current_attribute_value = self
+            for attribute in attributes:
+                current_attribute_value = current_attribute_value.__getattribute__(attribute)
 
             value = command.parse_args(current_attribute_value, args)
             if value.success:
@@ -611,11 +649,11 @@ class FractalisticApp(App):
 
     @property
     def selected_fractal(self): 
-        return fractals.fractal_list[self.fractal_index]
+        return fractals.fractal_list[self.render_settings.fractal_index]
 
     @property
     def selected_color(self):
-        return colors.color_renderers[self.color_renderer_index]
+        return colors.color_renderers[self.render_settings.color_renderer_index]
 
     def rewrite_logs(self):
         """Rewrite the logs so that they fit the new log panel size when the terminal is resized"""
@@ -645,26 +683,22 @@ class FractalisticApp(App):
 
     def get_divergence(self, point: mpc):
         """Get the divergence of a point using the current parameters"""
-        query_config = QueryConfig(point, self.options["max_iter"], self.julia_click)
-        return self.selected_fractal.get(query_config)
+        return self.selected_fractal.get(point, self.render_settings)
 
     
     def pos_to_c(self, pos: Vec, cell_size = None, screen_pos_on_plane = None, screen_size: Vec | None = None) -> mpc:
         """Takes a position (x, y) of the canvas and converts it into the corresponding complex number on the plane"""
         if cell_size is None:
-            cell_size = self.cell_size
+            cell_size = self.render_settings.cell_size
 
         if screen_pos_on_plane is None:
-            screen_pos_on_plane = self.screen_pos_on_plane
+            screen_pos_on_plane = self.render_settings.screen_pos_on_plane
 
         if screen_size is None:
-            screen_size = self.canv_size
+            screen_size = self.settings.canv_size
 
-        result_real = (pos.x - screen_size.x//2) * cell_size
-        result_imag = (pos.y - screen_size.y//2) * -cell_size 
-        result = mpc(result_real, result_imag) + screen_pos_on_plane
-         
-        return result
+        return pos_to_c(pos, cell_size, screen_pos_on_plane, screen_size)
+    
     def set_canv_size(self):
         """
         update self.canv_size
@@ -675,7 +709,7 @@ class FractalisticApp(App):
         width = self.canv.size.width
 
         # double the height because one char is two pixels in height
-        self.canv_size = Vec(width, height * 2)
+        self.settings.canv_size = Vec(width, height * 2)
 
     async def update_canvas_size(self):
         """
@@ -688,7 +722,7 @@ class FractalisticApp(App):
         await self.canv.remove()
 
         # And create a new one
-        self.canv = FractalCanv(int(self.canv_size.x), int(self.canv_size.y))
+        self.canv = FractalCanv(int(self.settings.canv_size.x), int(self.settings.canv_size.y))
 
         await self.container.mount(self.canv, before=self.right_container)
         
@@ -699,54 +733,57 @@ class FractalisticApp(App):
 
 
     def update_canv(self):
+        if not self.ready:
+            return
+            
         self.ready = False
         asyncio.get_event_loop().run_in_executor(None, self.update_canv_)
 
     def update_canv_(self):
-        self.precision = self.options["numeric_precision"]
-
         self.renders += 1
         start = monotonic()
+
+
+        result = self.get_divergence_matrix()
+        # If result is none, it means ctrl+c was pressed during the rendering
+        # then the program is exiting and we don't care anymore about updating the canvas
+        if result is None:
+            return
 
         # Used to get the average divergence of the current render
         divergence_sum = 0
         term_count = 0
 
-        with self.app.batch_update():
-            # y : [0; height[
-            for y in range(self.canv.height):
-                # x : [0; width[
-                for x in range(self.canv.width):
+        with self.batch_update():
+            for (y, line) in enumerate(result):
+                for (x, divergence) in enumerate(line):
 
                     # If there is a marker and the current x and y corresponds the its position
                     # make the pixel red and go to the next pixel
-                    if not self.marker_pos is None and x == self.marker_pos.x and y == self.marker_pos.y:
+                    if not self.settings.marker_pos is None and x == self.settings.marker_pos.x and y == self.settings.marker_pos.y:
                         self.canv.set_pixel(x, y, Color.parse("red"))
                         continue
 
-                    # The position of the pixel in the complex plane
-                    c_num = self.pos_to_c(Vec(x, y))
-                    # the result is -1 or the number of iteration it took for the series to diverge
-                    result = self.get_divergence(c_num)
-
-                    if result != -1:
-                        divergence_sum += result
+                    if divergence != -1:
+                        divergence_sum += divergence
                         term_count += 1
 
                     # Get a color from the result
-                    color = Color.parse("black") if result == -1 else self.selected_color(result)
+                    color = Color.parse("black") if divergence == -1 else self.selected_color(divergence)
                     self.canv.set_pixel(x, y, color)
 
+
         self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
-        self.current_zoom_level = f"{4 / (self.cell_size * self.canv_size.x):.4e}"
+        self.current_zoom_level = f"{4 / (self.render_settings.cell_size * self.settings.canv_size.x):.4e}"
         self.last_render_time = monotonic() - start
 
         self.update_border_info()
         self.ready = True
+    
 
     def update_border_info(self):
-        self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.canv_size.x * self.canv_size.y} pts | {self.renders} rndrs"
-        self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.options['max_iter']} iter"
+        self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.settings.canv_size.x * self.settings.canv_size.y} pts | {self.renders} rndrs"
+        self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.render_settings.max_iter} iter"
    
     
     ####### TEXTUAL APP METHODS ########
@@ -760,8 +797,8 @@ class FractalisticApp(App):
             c_num = self.pos_to_c(click_pos)
 
 
-            if self.click_pos_enabled:
-                self.screen_pos_on_plane = c_num
+            if self.settings.click_pos_enabled:
+                self.render_settings.screen_pos_on_plane = c_num
                 self.update_canv()
                 return
             else:
@@ -778,13 +815,13 @@ class FractalisticApp(App):
         # [OTHER CLICKS]
         elif event.button == 1 and self.selected_fractal.__name__ == "Julia":
             # Hide the marker since the fractal has changed
-            self.marker_pos = None
+            self.remove_marker()
 
-            self.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
+            self.render_settings.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
 
             self.log_write([
                 f"[on red] Current Julia Set ",
-                f"{self.julia_click:.4f}",
+                f"{self.render_settings.julia_click:.4f}",
             ])
 
         self.update_canv()
@@ -794,12 +831,12 @@ class FractalisticApp(App):
         yield Footer()
         yield self.progress_bar
 
-        self.set_command_list()
-
         self.command_input.border_title = "Command Input"
         self.rich_log.border_title = "Logs Panel"
 
     async def on_ready(self):
+        self.set_command_list()
+
         # Mount the log panel and the command input in the right container
         await self.right_container.mount(self.rich_log)
         await self.right_container.mount(self.command_input)
@@ -819,7 +856,7 @@ class FractalisticApp(App):
     def on_ready_(self):
         
 
-        self.precision = self.options['numeric_precision']
+        self.precision = self.render_settings.wanted_numeric_precision
         self.set_canv_size()
 
         self.ready = True
@@ -836,8 +873,8 @@ class FractalisticApp(App):
         self.log_write(f"If you are experiencing slow rendering, try to reduce the size of your terminal.")
         self.log_write(f"You can change focus between the canvas, the log panel and the command input using [blue]tab[/blue] or [blue]with your mouse[/blue].")
 
-        if not self.options['state_file'] is None: 
-            self.load_state(self.options['state_file'])
+        if not self.settings.state_file is None: 
+            self.load_state(self.settings.state_file)
         
         self.on_resize()
 
@@ -851,5 +888,6 @@ class FractalisticApp(App):
 
     async def after_resize(self) -> None:
         self.set_canv_size()
+        self.ready = True
         await self.update_canvas_size()
         self.rewrite_logs()

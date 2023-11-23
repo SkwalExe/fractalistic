@@ -1,3 +1,15 @@
+# 1.0.0 - 2023-11-23
+
+### Added 
+- multithreading (multiprocessing)
+- `--threads/-t` option
+- `threads` command
+- screenshot threads (also command and cmdline option)
+- A lot of new bugs for sure...
+
+### Improved 
+- Code quality (a lot)
+
 # 0.6.0 - 2023-11-16
 
 ### Added

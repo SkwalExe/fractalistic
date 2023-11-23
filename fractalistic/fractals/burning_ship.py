@@ -1,6 +1,6 @@
-from ..query_config import QueryConfig
 from .fractal_base import FractalBase
 from gmpy2 import mpc
+from ..settings import RenderSettings
 
 class BurningShip(FractalBase):
     """
@@ -11,15 +11,15 @@ class BurningShip(FractalBase):
     message = None
 
     @staticmethod
-    def get(config: QueryConfig) -> int:
+    def get(point: mpc, settings: RenderSettings) -> int:
         i = 0
         z = mpc(0, 0)
-        while abs(z) < 5 and i < config.max_iter:
+        while abs(z) < 5 and i < settings.max_iter:
             z = mpc(abs(z.real), abs(z.imag))
-            z = z*z - config.point_in_plane
+            z = z*z - point
             i+=1
 
-        if i == config.max_iter:
+        if i == settings.max_iter:
             return -1
         
         return i
