@@ -219,7 +219,11 @@ class FractalisticApp(App):
 
     def command_threads(self, value: int):
         self.settings.threads = value
-        self.log_write(f"Thread count set to [blue]{self.settings.threads}")
+        self.log_write(f"Rendering thread count set to [blue]{self.settings.threads}")
+
+    def command_screenshot_threads(self, value: int):
+        self.settings.screenshot_threads = value
+        self.log_write(f"Screensdhot thread count set to [blue]{self.settings.threads}")
 
     # We cant directly set command_list because we couldn't reference command methods correctly
     def set_command_list(self):
@@ -246,6 +250,12 @@ class FractalisticApp(App):
                 funct=self.command_threads,
                 help="Change the number of threads used for rendering",
                 app_attribute="settings.threads",
+                min_value=1
+            ),
+            "screenshot_threads": CommandIncrement(
+                funct=self.command_screenshot_threads,
+                help="Change the number of threads used for rendering screenshots",
+                app_attribute="settings.screenshot_threads",
                 min_value=1
             ),
             "zoom_lvl": CommandIncrement(
@@ -384,7 +394,7 @@ class FractalisticApp(App):
 
         # The size in the complex plane, of a pixel of the screenshot
         pixel_size = self.settings.canv_size.x * self.settings.render_settings.cell_size / screenshot_width
-        result = self.get_divergence_matrix(cell_size=pixel_size, size=screenshot_size, update_loading_bar=True)
+        result = self.get_divergence_matrix(cell_size=pixel_size, size=screenshot_size, update_loading_bar=True, threads=self.settings.screenshot_threads)
         
         # If the screenshot was cancelled, None is returned
         # If the screenshot wasn't cancelled, save the screenshot to a file, put a message in the log panel
@@ -737,6 +747,10 @@ class FractalisticApp(App):
 
 
         result = self.get_divergence_matrix()
+        # If result is none, it means ctrl+c was pressed during the rendering
+        # then the program is exiting and we don't care anymore about updating the canvas
+        if result is None:
+            return
 
         # Used to get the average divergence of the current render
         divergence_sum = 0

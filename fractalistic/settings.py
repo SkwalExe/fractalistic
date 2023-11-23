@@ -46,6 +46,9 @@ class Settings():
     threads: int = 5
     """number of threads used for rendering"""
 
+    screenshot_threads: int = 10
+    """number of threads used for taking screenshots"""
+
     state_file: str | None = None
     """If not none, the path of the file to load the state from"""
 

@@ -4,6 +4,7 @@
 - multithreading (multiprocessing)
 - `--threads/-t` option
 - `threads` command
+- screenshot threads (also command and cmdline option)
 - A lot of new bugs for sure...
 
 ### Improved 

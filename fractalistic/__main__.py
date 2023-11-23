@@ -21,6 +21,10 @@ import gmpy2
     help="Number of threads to use for rendering", 
     type=IntRange(1), 
     default=Settings.threads)
+@option("-st", "--screenshot-threads",
+    help="Number of threads to use for rendering HQ screenshots", 
+    type=IntRange(1), 
+    default=Settings.screenshot_threads)
 @option("-ls", "--load-state", 
     help="Load state from a file", 
     type=STRING)
@@ -59,7 +63,7 @@ import gmpy2
     help="Enable debug mode for developers.", 
     is_flag=True)
 
-def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str, default_color: str, debug: bool, decimal_precision: int, max_iter: int, version: bool, load_state: str, threads: int):
+def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str, default_color: str, debug: bool, decimal_precision: int, max_iter: int, version: bool, load_state: str, threads: int, screenshot_threads: int):
 
     # If -v or --version is used, show version and exit
     if version:
@@ -82,6 +86,7 @@ def main(fit: bool, quality: float, size: tuple[int, int], default_fractal: str,
     app.settings.render_settings.wanted_numeric_precision = decimal_precision
     app.settings.state_file = load_state
     app.settings.threads = threads
+    app.settings.screenshot_threads = screenshot_threads
 
     app.run()
 
