@@ -217,6 +217,10 @@ class FractalisticApp(App):
         self.load_state(args[0])
         self.update_canv()
 
+    def command_threads(self, value: int):
+        self.settings.threads = value
+        self.log_write(f"Thread count set to [blue]{self.settings.threads}")
+
     # We cant directly set command_list because we couldn't reference command methods correctly
     def set_command_list(self):
         self.command_list = {
@@ -237,6 +241,12 @@ class FractalisticApp(App):
                 help="Fine-tune numeric precision by specifying the desired bit length for numeric values",
                 app_attribute="precision",
                 min_value=5
+            ),
+            "threads": CommandIncrement(
+                funct=self.command_threads,
+                help="Change the number of threads used for rendering",
+                app_attribute="settings.threads",
+                min_value=1
             ),
             "zoom_lvl": CommandIncrement(
                 funct=self.command_zoom_lvl,
@@ -289,7 +299,6 @@ class FractalisticApp(App):
 
     ####### ACTIONS ###########
     def action_cancel_screenshot(self):
-        self.current_process_pool.terminate()
         self.cancel_screenshot = True
         self.log_write("Screenshot cancelled")
 
@@ -334,7 +343,7 @@ class FractalisticApp(App):
         # Remove the marker when changing fractal
         self.remove_marker()
 
-        self.fractal_index = (self.settings.render_settings.fractal_index + 1) % len(fractals.fractal_list)
+        self.settings.render_settings.fractal_index = (self.settings.render_settings.fractal_index + 1) % len(fractals.fractal_list)
         self.update_canv()
 
         to_write = [f"Now viewing the [purple]{self.selected_fractal.__name__}[/purple] fractal."]
@@ -455,32 +464,52 @@ class FractalisticApp(App):
         if size is None:
             size = self.settings.canv_size
 
+        # Number of lines to render per thread
         chunk_size = ceil(size.y / threads)
+        # List of tuples (start, end) of the lines to render for each thread
+        # start is inclusive, end is exclusive
         chunks = [[x * chunk_size, min((x+1) * chunk_size, size.y)] for x in range(0, threads)]
         
+
         render_settings = deepcopy(self.settings.render_settings)
         render_settings.cell_size = cell_size
 
         manager = Manager()
         queue = manager.Queue()
+
         self.current_process_pool = Pool(processes=threads)
+
+        # Start the rendering processes
         divergence_matrices_async = self.current_process_pool.starmap_async(get_divergence_matrix, [(chunk[0], chunk[1], render_settings, size, queue) for chunk in chunks], chunksize=1)
         
         rendered_lines = 0
         while not divergence_matrices_async.ready():
+
+            # Return None if the screenshot was cancelled, and terminate the processes
             if self.cancel_screenshot:
+                self.current_process_pool.terminate()
                 return None
 
             while not queue.empty():
                 rendered_lines += 1
+
+                # A message is added to the queue everytime a line is rendered
                 queue.get()
+
+                # Make the progress bar advance every 10 lines
                 if rendered_lines % 10 == 0:
                     self.progress_bar.advance()
 
+        # When the rendering is finished, get the result from each process
         divergence_matrices = divergence_matrices_async.get()
+
+        # Flatten the array of each process result into one big array
         result = list(itertools.chain.from_iterable(divergence_matrices))
+
+        # Close the pool of processes
         self.current_process_pool.close()
         self.current_process_pool = None
+
         return result
 
     def load_state(self, filename: str):
@@ -696,6 +725,9 @@ class FractalisticApp(App):
 
 
     def update_canv(self):
+        if not self.ready:
+            return
+            
         self.ready = False
         asyncio.get_event_loop().run_in_executor(None, self.update_canv_)
 
@@ -844,5 +876,6 @@ class FractalisticApp(App):
 
     async def after_resize(self) -> None:
         self.set_canv_size()
+        self.ready = True
         await self.update_canvas_size()
         self.rewrite_logs()

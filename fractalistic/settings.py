@@ -43,7 +43,7 @@ class Settings():
     click_pos_enabled: bool = False
     """Set the canvas position to the next click position"""
 
-    threads: int = 1
+    threads: int = 5
     """number of threads used for rendering"""
 
     state_file: str | None = None
