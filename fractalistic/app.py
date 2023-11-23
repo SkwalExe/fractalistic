@@ -152,9 +152,9 @@ class FractalisticApp(App):
 
     def command_max_iter(self, value: int):
                 
-        self.settings.render_settings.max_iter = value
+        self.render_settings.max_iter = value
 
-        self.log_write(f"max_iter set to [blue]{self.settings.render_settings.max_iter}")
+        self.log_write(f"max_iter set to [blue]{self.render_settings.max_iter}")
         self.update_canv()
 
     def command_zoom_lvl(self, value: int):
@@ -167,7 +167,7 @@ class FractalisticApp(App):
 
     def command_goto(self, args):
         if len(args) == 0:
-            self.log_write(f"Current position: [blue]{self.settings.render_settings.screen_pos_on_plane.real}+{self.settings.render_settings.screen_pos_on_plane.imag}i")
+            self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane.real}+{self.render_settings.screen_pos_on_plane.imag}i")
             return
 
         real = None
@@ -179,7 +179,7 @@ class FractalisticApp(App):
             self.log_write("Real and imaginary parts must be valid integers or floats")
             return
 
-        self.settings.render_settings.screen_pos_on_plane = mpc(real, imag)
+        self.render_settings.screen_pos_on_plane = mpc(real, imag)
         self.update_canv()
 
     def command_click_pos(self, args):
@@ -319,7 +319,7 @@ class FractalisticApp(App):
 
         # Remove the marker when moving
         self.remove_marker()
-        self.settings.render_settings.screen_pos_on_plane += mpc(self.settings.move_distance * self.settings.render_settings.cell_size * x, self.settings.move_distance * self.settings.render_settings.cell_size * y)
+        self.render_settings.screen_pos_on_plane += mpc(self.settings.move_distance * self.render_settings.cell_size * x, self.settings.move_distance * self.render_settings.cell_size * y)
         self.update_canv()
 
     def action_zoom(self, direction: str):
@@ -334,7 +334,7 @@ class FractalisticApp(App):
         
         # 101 to avoid doind 1-1 and making a 0 zoom factor which would cause a div0 error
         zoom_factor = 1 - self.settings.zoom_intensity / 101
-        self.settings.render_settings.cell_size *= zoom_factor if direction == "in" else 1/zoom_factor
+        self.render_settings.cell_size *= zoom_factor if direction == "in" else 1/zoom_factor
         
         self.update_canv()
 
@@ -342,7 +342,7 @@ class FractalisticApp(App):
         if not self.ready:
             return
         
-        self.settings.render_settings.color_renderer_index = (self.settings.render_settings.color_renderer_index + 1) % len(colors.color_renderers)
+        self.render_settings.color_renderer_index = (self.render_settings.color_renderer_index + 1) % len(colors.color_renderers)
         self.update_canv()
         self.log_write(f"Now using the [purple]{self.selected_color.__name__}[/purple] color scheme")
 
@@ -353,7 +353,7 @@ class FractalisticApp(App):
         # Remove the marker when changing fractal
         self.remove_marker()
 
-        self.settings.render_settings.fractal_index = (self.settings.render_settings.fractal_index + 1) % len(fractals.fractal_list)
+        self.render_settings.fractal_index = (self.render_settings.fractal_index + 1) % len(fractals.fractal_list)
         self.update_canv()
 
         to_write = [f"Now viewing the [purple]{self.selected_fractal.__name__}[/purple] fractal."]
@@ -393,7 +393,7 @@ class FractalisticApp(App):
 
 
         # The size in the complex plane, of a pixel of the screenshot
-        pixel_size = self.settings.canv_size.x * self.settings.render_settings.cell_size / screenshot_width
+        pixel_size = self.settings.canv_size.x * self.render_settings.cell_size / screenshot_width
         result = self.get_divergence_matrix(cell_size=pixel_size, size=screenshot_size, update_loading_bar=True, threads=self.settings.screenshot_threads)
         
         # If the screenshot was cancelled, None is returned
@@ -470,7 +470,7 @@ class FractalisticApp(App):
         if threads is None:
             threads = self.settings.threads
         if cell_size is None:
-            cell_size = self.settings.render_settings.cell_size
+            cell_size = self.render_settings.cell_size
         if size is None:
             size = self.settings.canv_size
 
@@ -481,7 +481,7 @@ class FractalisticApp(App):
         chunks = [[x * chunk_size, min((x+1) * chunk_size, size.y)] for x in range(0, threads)]
         
 
-        render_settings = deepcopy(self.settings.render_settings)
+        render_settings = deepcopy(self.render_settings)
         render_settings.cell_size = cell_size
 
         manager = Manager()
@@ -537,17 +537,17 @@ class FractalisticApp(App):
             return
         
         try:
-            self.settings.render_settings.fractal_index = get_fractal_index_from_name(state["fractal"])
-            self.settings.render_settings.color_renderer_index = get_color_index_from_name(state["color"])
-            self.settings.render_settings.max_iter = int(state["max_iter"])
-            self.precision = self.settings.render_settings.wanted_numeric_precision
-            self.settings.render_settings.cell_size = mpfr(state["cell_size"])
+            self.render_settings.fractal_index = get_fractal_index_from_name(state["fractal"])
+            self.render_settings.color_renderer_index = get_color_index_from_name(state["color"])
+            self.render_settings.max_iter = int(state["max_iter"])
+            self.precision = self.render_settings.wanted_numeric_precision
+            self.render_settings.cell_size = mpfr(state["cell_size"])
             screen_pos_on_plane_real = mpfr(state["screen_pos_on_plane_real"])
             screen_pos_on_plane_imag = mpfr(state["screen_pos_on_plane_imag"])
             self.stetings.render_settings.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
             julia_click_real = mpfr(state["julia_click_real"])
             julia_click_imag = mpfr(state["julia_click_imag"])
-            self.settings.render_settings.julia_click = mpc(julia_click_real, julia_click_imag)
+            self.render_settings.julia_click = mpc(julia_click_real, julia_click_imag)
 
         except KeyError as e:
             self.log_write(f"Cannot load state from file '{filename}'. [red]Missing key: {e}")
@@ -559,13 +559,13 @@ class FractalisticApp(App):
         return {
             "fractal": self.selected_fractal.__name__,
             "color": self.selected_color.__name__,
-            "max_iter": str(self.settings.render_settings.max_iter),
-            "precision": str(self.settings.render_settings.wanted_numeric_precision),
-            "cell_size": self.settings.render_settings.cell_size.__format__(".2048g"),
-            "screen_pos_on_plane_real": self.settings.render_settings.screen_pos_on_plane.real.__format__(".2048g"),
-            "screen_pos_on_plane_imag": self.settings.render_settings.screen_pos_on_plane.imag.__format__(".2048g"),
-            "julia_click_real": self.settings.render_settings.julia_click.real.__format__(".2048g"),
-            "julia_click_imag": self.settings.render_settings.julia_click.imag.__format__(".2048g"),
+            "max_iter": str(self.render_settings.max_iter),
+            "precision": str(self.render_settings.wanted_numeric_precision),
+            "cell_size": self.render_settings.cell_size.__format__(".2048g"),
+            "screen_pos_on_plane_real": self.render_settings.screen_pos_on_plane.real.__format__(".2048g"),
+            "screen_pos_on_plane_imag": self.render_settings.screen_pos_on_plane.imag.__format__(".2048g"),
+            "julia_click_real": self.render_settings.julia_click.real.__format__(".2048g"),
+            "julia_click_imag": self.render_settings.julia_click.imag.__format__(".2048g"),
             "version": __version__,
         }
 
@@ -573,15 +573,13 @@ class FractalisticApp(App):
         # remove the marker
         self.remove_marker()
 
-        self.settings.render_settings.cell_size = 4 / self.settings.canv_size.x
-        self.settings.render_settings.screen_pos_on_plane = mpc(0, 0)
+        self.render_settings.cell_size = 4 / self.settings.canv_size.x
+        self.render_settings.screen_pos_on_plane = mpc(0, 0)
 
     @property
     def precision(self):
         return gmpy2.get_context().precision
 
-    # NOT USED FOR NOW
-    # will refactor code to use this later
     @property
     def render_settings(self):
         return self.settings.render_settings
@@ -589,7 +587,7 @@ class FractalisticApp(App):
     @precision.setter
     def precision(self, value):
         set_precision(value)
-        self.settings.render_settings.wanted_numeric_precision = value
+        self.render_settings.wanted_numeric_precision = value
 
     def get_command(self, name: str) -> Command:
         if not name in self.command_list:
@@ -651,11 +649,11 @@ class FractalisticApp(App):
 
     @property
     def selected_fractal(self): 
-        return fractals.fractal_list[self.settings.render_settings.fractal_index]
+        return fractals.fractal_list[self.render_settings.fractal_index]
 
     @property
     def selected_color(self):
-        return colors.color_renderers[self.settings.render_settings.color_renderer_index]
+        return colors.color_renderers[self.render_settings.color_renderer_index]
 
     def rewrite_logs(self):
         """Rewrite the logs so that they fit the new log panel size when the terminal is resized"""
@@ -685,16 +683,16 @@ class FractalisticApp(App):
 
     def get_divergence(self, point: mpc):
         """Get the divergence of a point using the current parameters"""
-        return self.selected_fractal.get(point, self.settings.render_settings)
+        return self.selected_fractal.get(point, self.render_settings)
 
     
     def pos_to_c(self, pos: Vec, cell_size = None, screen_pos_on_plane = None, screen_size: Vec | None = None) -> mpc:
         """Takes a position (x, y) of the canvas and converts it into the corresponding complex number on the plane"""
         if cell_size is None:
-            cell_size = self.settings.render_settings.cell_size
+            cell_size = self.render_settings.cell_size
 
         if screen_pos_on_plane is None:
-            screen_pos_on_plane = self.settings.render_settings.screen_pos_on_plane
+            screen_pos_on_plane = self.render_settings.screen_pos_on_plane
 
         if screen_size is None:
             screen_size = self.settings.canv_size
@@ -776,7 +774,7 @@ class FractalisticApp(App):
 
 
         self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
-        self.current_zoom_level = f"{4 / (self.settings.render_settings.cell_size * self.settings.canv_size.x):.4e}"
+        self.current_zoom_level = f"{4 / (self.render_settings.cell_size * self.settings.canv_size.x):.4e}"
         self.last_render_time = monotonic() - start
 
         self.update_border_info()
@@ -785,7 +783,7 @@ class FractalisticApp(App):
 
     def update_border_info(self):
         self.canv.border_title = f"Avg divergence: {self.average_divergence:.4f} | {self.settings.canv_size.x * self.settings.canv_size.y} pts | {self.renders} rndrs"
-        self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.settings.render_settings.max_iter} iter"
+        self.canv.border_subtitle = f"Zoom: {self.current_zoom_level} | {self.last_render_time:.4f}s | {self.render_settings.max_iter} iter"
    
     
     ####### TEXTUAL APP METHODS ########
@@ -800,7 +798,7 @@ class FractalisticApp(App):
 
 
             if self.settings.click_pos_enabled:
-                self.settings.render_settings.screen_pos_on_plane = c_num
+                self.render_settings.screen_pos_on_plane = c_num
                 self.update_canv()
                 return
             else:
@@ -819,11 +817,11 @@ class FractalisticApp(App):
             # Hide the marker since the fractal has changed
             self.remove_marker()
 
-            self.settings.render_settings.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
+            self.render_settings.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
 
             self.log_write([
                 f"[on red] Current Julia Set ",
-                f"{self.settings.render_settings.julia_click:.4f}",
+                f"{self.render_settings.julia_click:.4f}",
             ])
 
         self.update_canv()
@@ -858,7 +856,7 @@ class FractalisticApp(App):
     def on_ready_(self):
         
 
-        self.precision = self.settings.render_settings.wanted_numeric_precision
+        self.precision = self.render_settings.wanted_numeric_precision
         self.set_canv_size()
 
         self.ready = True
