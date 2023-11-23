@@ -165,11 +165,13 @@ class FractalisticApp(App):
         self.settings.move_distance = value
         self.log_write(f"Move distance set to [blue]{self.settings.move_distance}")
 
-    def command_goto(self, args):
+    def command_pos(self, args):
+        # If no args are provided, just show the current position
         if len(args) == 0:
-            self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane.real}+{self.render_settings.screen_pos_on_plane.imag}i")
+            self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane.real}{self.render_settings.screen_pos_on_plane.imag:+}i")
             return
 
+        # If args are provided, go to the given x and y position
         real = None
         imag = None
         try:
@@ -180,6 +182,8 @@ class FractalisticApp(App):
             return
 
         self.render_settings.screen_pos_on_plane = mpc(real, imag)
+
+        # Update canvas since we just moved
         self.update_canv()
 
     def command_click_pos(self, args):
@@ -272,7 +276,7 @@ class FractalisticApp(App):
                 extra_help="[green]Usage : \\[width] \\[height]\nUsage : no args[/green]\nIf no width and height are specified, the command line settings are used."
             ),
             "pos": Command(
-                funct=self.command_goto,
+                funct=self.command_pos,
                 help="Set the position to a specific point in the complex plane.",
                 accepted_arg_counts=[0, 2],
                 extra_help="[green]Usage : \\[real] \\[imag]\nUsage : no args[/green]\nIf no arguments are given, just print out the current position. Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats."
@@ -500,7 +504,7 @@ class FractalisticApp(App):
                 self.current_process_pool.terminate()
                 return None
 
-            while not queue.empty():
+            while not queue.empty() and update_loading_bar:
                 rendered_lines += 1
 
                 # A message is added to the queue everytime a line is rendered
@@ -589,7 +593,7 @@ class FractalisticApp(App):
         set_precision(value)
         self.render_settings.wanted_numeric_precision = value
 
-    def get_command(self, name: str) -> Command:
+    def get_command(self, name: str) -> Command | None:
         if not name in self.command_list:
             self.log_write(f"[red]Cannot find command: [white on red]{name}")
             return None
@@ -802,13 +806,13 @@ class FractalisticApp(App):
                 self.update_canv()
                 return
             else:
-                self.marker_pos = click_pos
+                self.settings.marker_pos = click_pos
                 divergence = self.get_divergence(c_num)
 
                 self.log_write([
                     f"[on red] Click info ",
                     f"Clicked at (c): {digits(c_num)}",
-                    f"Clicked at (pos): {self.marker_pos}",
+                    f"Clicked at (pos): {self.settings.marker_pos}",
                     f"Divergence: {divergence}",
                 ])
 

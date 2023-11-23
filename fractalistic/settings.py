@@ -40,7 +40,7 @@ class Settings():
     zoom_intensity: int = 20
     """How much should we zoom/unzoom in percentage"""
 
-    click_pos_enabled: bool = False
+    click_pos_enabled: bool = True
     """Set the canvas position to the next click position"""
 
     threads: int = 5
