@@ -1,3 +1,9 @@
+# 1.2.0 - Unreleased
+
+### Fixed
+- Minor display issues
+- Bug with click markers
+
 # 1.1.0 - 2023-11-23
 
 ### Fixed
