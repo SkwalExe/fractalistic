@@ -544,7 +544,7 @@ class FractalisticApp(App):
             self.render_settings.cell_size = mpfr(state["cell_size"])
             screen_pos_on_plane_real = mpfr(state["screen_pos_on_plane_real"])
             screen_pos_on_plane_imag = mpfr(state["screen_pos_on_plane_imag"])
-            self.stetings.render_settings.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
+            self.settings.render_settings.screen_pos_on_plane = mpc(screen_pos_on_plane_real, screen_pos_on_plane_imag)
             julia_click_real = mpfr(state["julia_click_real"])
             julia_click_imag = mpfr(state["julia_click_imag"])
             self.render_settings.julia_click = mpc(julia_click_real, julia_click_imag)
