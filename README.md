@@ -110,3 +110,9 @@ TEXTUAL=devtools,debug python3 -m fractalistic
 ![Screenshot 7](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot7.png)
 
 ![Screenshot 8](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot8.png)
+
+![Screenshot 9](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot9.png)
+
+![Screenshot 10](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot10.png)
+
+![Screenshot 11](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot11.png)

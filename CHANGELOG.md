@@ -1,3 +1,8 @@
+# 1.1.0 - 2023-11-23
+
+### Fixed
+- Bug with state loading
+
 # 1.0.0 - 2023-11-23
 
 ### Added 
