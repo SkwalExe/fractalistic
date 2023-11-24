@@ -1,6 +1,3 @@
-from inspect import cleandoc
-
-
 class Command():
     # No type definition for funct because of weird behaviour
     # of linter due to assignment to a Callable
@@ -31,15 +28,13 @@ class CommandIncrement(Command):
         super().__init__(
             *args,
             **kwargs,
-            extra_help=cleandoc(
-                """
-                [green]Usage : +/- \\[value].
-                Usage : \\[value].
-                Usage : no args.[/green]
-                - If no arguments are passed, the current value is printed out.
-                - If no sign is specified but an argument is provided, the value is set to the one specified.
-                - If a sign is specified, the value is incremented or decremented by the second argument.\
-                """
+            extra_help=(
+                "[green]Usage : +/- \\[value].\n"
+                "Usage : \\[value].\n"
+                "Usage : no args.[/green]\n"
+                "- If no arguments are passed, the current value is printed out.\n"
+                "- If no sign is specified but an argument is provided, the value is set to the one specified.\n"
+                "- If a sign is specified, the value is incremented or decremented by the second argument."
             ),
             accepted_arg_counts=[0, 1, 2]
         )
