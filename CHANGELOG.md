@@ -1,3 +1,8 @@
+# 1.4.0 - Unreleased
+
+### Fixed
+- Fixed typos
+
 # 1.3.0 - 2023-11-24
 
 ### Added
