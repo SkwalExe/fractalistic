@@ -16,7 +16,8 @@ class RenderSettings():
     """Index of the selected fractal"""
 
     julia_click: mpc = mpc(1, 0)
-    """The complex number corresponding to the Julia set to show when a point is clicked on the canvas"""
+    """The complex number corresponding to the Julia set to show when a point is clicked on the canvas,
+    the name is a bit misleading, but it will be kept for state files backward compatibility"""
 
     color_renderer_index: int = 0
     """Index of the current color renderer"""
@@ -42,10 +43,10 @@ class Settings():
     zoom_intensity: int = 20
     """How much should we zoom/unzoom in percentage"""
 
-    left_click_mode_name: str = "zoom"
+    left_click_mode_name: str = "zoom_in"
     """The action to take when left clicking on the canvas"""
 
-    right_click_mode_name: str = "move"
+    right_click_mode_name: str = "zoom_out"
     """The action to take when right clicking on the canvas"""
 
     @property
