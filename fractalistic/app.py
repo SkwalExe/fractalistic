@@ -253,7 +253,7 @@ class FractalisticApp(App):
 
     def command_screenshot_threads(self, value: int) -> None:
         self.settings.screenshot_threads = value
-        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_size}")
+        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_threads}")
 
     # We cant directly set command_list because we couldn't reference command methods correctly
     def set_command_list(self) -> None:
