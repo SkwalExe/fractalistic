@@ -4,6 +4,7 @@ from .colors import color_renderers
 from .vec import Vec
 from .settings import RenderSettings
 from multiprocessing import Queue
+from .line_divergence_result import LineDivergenceResult
 from gmpy2 import mpc
 import gmpy2
 
@@ -27,21 +28,21 @@ def pos_to_c(pos: Vec, cell_size, screen_pos_on_plane, screen_size) -> mpc:
     return result
 
 
-def set_precision(value):
+def set_precision(value) -> None:
     gmpy2.get_context().precision = value
 
 
-def get_divergence_matrix(start: int, stop: int, render_settings: RenderSettings, size: Vec, queue: Queue):
+def get_divergence_matrix(start: int, stop: int, render_settings: RenderSettings, size: Vec, queue: Queue) -> None:
     set_precision(render_settings.wanted_numeric_precision)
     lines_to_render = stop - start
-    result = [[0 for x in range(size.x)] for y in range(lines_to_render)]
     pos_on_plane = render_settings.screen_pos_on_plane
 
     for y in range(lines_to_render):
+        result = [0] * size.x
         for x in range(size.x):
             pos = Vec(x, y+start)
             c_num = pos_to_c(pos, render_settings.cell_size, pos_on_plane, size)
-            result[y][x] = fractal_list[render_settings.fractal_index].get(c_num, render_settings)
-        queue.put(None)
+            result[x] = fractal_list[render_settings.fractal_index].get(c_num, render_settings)
+        queue.put(LineDivergenceResult(y+start, result))
 
-    return result
+    queue.put(None)
