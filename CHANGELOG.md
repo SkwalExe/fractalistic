@@ -1,3 +1,12 @@
+# 1.3.0 - Unreleased
+
+### Added
+- Zoom out click mode
+
+### Fixed
+- Prevent clicks outside of the canvas to be registered as canvas clicks
+- Weird zoom in behaviour
+
 # 1.2.0 - 2023-11-24
 
 ### Fixed

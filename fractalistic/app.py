@@ -773,6 +773,13 @@ class FractalisticApp(App):
 
         return pos_to_c(pos, cell_size, screen_pos_on_plane, screen_size)
 
+    def zoom_at_pos(self, pos: Vec, direction: str) -> None:
+        original_c_num = self.pos_to_c(pos)
+        self.action_zoom(direction)
+        new_c_num = self.pos_to_c(pos)
+
+        self.render_settings.screen_pos_on_plane += original_c_num - new_c_num
+
     def set_canv_size(self) -> None:
         """
         update self.canv_size
@@ -865,7 +872,8 @@ class FractalisticApp(App):
 
     # ---------- TEXTUAL APP METHODS
 
-    def on_click(self, event: Click) -> None:
+    @on(FractalCanv.CanvClick)
+    def canvas_clicked(self, event: Click) -> None:
         if not self.ready:
             return
 
@@ -907,9 +915,11 @@ class FractalisticApp(App):
             case "move":
                 self.render_settings.screen_pos_on_plane = c_num
                 self.update_canv()
-            case "zoom":
-                self.render_settings.screen_pos_on_plane = c_num
-                self.action_zoom("in")
+            case "zoom_in":
+                self.zoom_at_pos(click_pos, "in")
+                self.update_canv()
+            case "zoom_out":
+                self.zoom_at_pos(click_pos, "out")
                 self.update_canv()
 
     def compose(self):
