@@ -1,4 +1,4 @@
-# 1.2.0 - Unreleased
+# 1.2.0 - 2023-11-24
 
 ### Fixed
 - Minor display issues
