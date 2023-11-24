@@ -1,9 +1,10 @@
 from gmpy2 import mpfr, mpc
 from .vec import Vec
 
+
 class RenderSettings():
     """A class to store all settings for renders."""
-   
+
     cell_size: mpfr | None = None
     """The height and width of one pixel in the complex plane"""
 
