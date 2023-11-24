@@ -1,10 +1,8 @@
 from textual_canvas import Canvas
 from textual.binding import Binding
 
-class FractalCanv(Canvas):
-    
-    ##### TEXTUAL VARS #####
 
+class FractalCanv(Canvas):
     BINDINGS = [
         Binding("left", "go(-1, 0)", "Left"),
         Binding("right", "go(1, 0)", "Right"),

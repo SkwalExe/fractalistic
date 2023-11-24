@@ -4,6 +4,9 @@
 - Minor display issues
 - Bug with click markers
 
+### Added
+- (dev) Flake8 linting and type-checking
+
 # 1.1.0 - 2023-11-23
 
 ### Fixed
