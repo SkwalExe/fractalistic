@@ -1,5 +1,6 @@
 from gmpy2 import mpfr, mpc
 from .vec import Vec
+from .click_modes import ClickMode, CLICK_MODES
 
 
 class RenderSettings():
@@ -41,8 +42,19 @@ class Settings():
     zoom_intensity: int = 20
     """How much should we zoom/unzoom in percentage"""
 
-    click_pos_enabled: bool = True
-    """Set the canvas position to the next click position"""
+    left_click_mode_name: str = "zoom"
+    """The action to take when left clicking on the canvas"""
+
+    right_click_mode_name: str = "move"
+    """The action to take when right clicking on the canvas"""
+
+    @property
+    def left_click_mode(self) -> ClickMode:
+        return CLICK_MODES[self.left_click_mode_name]
+
+    @property
+    def right_click_mode(self) -> ClickMode:
+        return CLICK_MODES[self.right_click_mode_name]
 
     threads: int = 5
     """number of threads used for rendering"""

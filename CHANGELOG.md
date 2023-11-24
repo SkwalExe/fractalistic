@@ -5,6 +5,7 @@
 - Bug with click markers
 
 ### Added
+- Click modes
 - (dev) Flake8 linting and type-checking
 
 # 1.1.0 - 2023-11-23
