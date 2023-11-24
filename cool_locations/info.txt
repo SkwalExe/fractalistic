@@ -1,0 +1,3 @@
+Here you can find state files that I found interesting.
+Load them with the -ls option or the load_state command.
+You can create a PR and add your own as well!

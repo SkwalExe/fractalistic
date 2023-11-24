@@ -1,3 +1,3 @@
 """Terminal based fractal explorer, including Mandelbrot, Burning Ship, and Julia."""
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"

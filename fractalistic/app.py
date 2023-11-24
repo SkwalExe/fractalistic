@@ -12,6 +12,7 @@ from .utils import (
     get_fractal_index_from_name, get_color_index_from_name)
 from .fractals.fractal_base import FractalBase
 from .vec import Vec
+from .click_modes import CLICK_MODES
 from .settings import Settings, RenderSettings
 from .command import Command, CommandIncrement, CommandIncrementArgParseResult
 from .fractal_canv import FractalCanv
@@ -22,8 +23,8 @@ from typing import Callable
 import asyncio
 from multiprocessing import Pool, Manager
 from rich.rule import Rule
-from time import monotonic, sleep, time
-from gmpy2 import mpc, digits, mpfr
+from time import monotonic, time
+from gmpy2 import mpc, mpfr
 from copy import deepcopy
 import gmpy2
 import toml
@@ -191,16 +192,33 @@ class FractalisticApp(App):
         # Update canvas since we just moved
         self.update_canv()
 
-    def command_click_pos(self, args) -> None:
-        if len(args) == 1:
-            if not args[0] in ["off", "on"]:
-                self.log_write("[red]Expected 'on' or 'off'.")
+    def command_click_mode(self, args: list[str]) -> None:
+        # If no args are provided, print the current modes
+        # and the available modes.
+        if len(args) == 0:
+            self.log_write([
+                "[purple]Available modes:[/purple]"
+                + ''.join([f'\n- [blue]{mode}[/blue]: {CLICK_MODES[mode].description}' for mode in CLICK_MODES]),
+                f"\nCurrent left click mode: [blue]{self.settings.left_click_mode_name}[/blue]",
+                f"Current right click mode: [blue]{self.settings.right_click_mode_name}[/blue]",
+            ])
+            return
 
-            self.settings.click_pos_enabled = args[0] == "on"
+        # If two args were provided
+        if args[0] not in ["left", "right"]:
+            self.log_write("[red]First argument must be 'left' or 'right'")
+            return
 
-        status_str = 'enabled' if self.settings.click_pos_enabled else 'disabled'
-        self.log_write(f"Click pos mode is currently : {status_str}.")
-        return
+        if args[1] not in CLICK_MODES:
+            self.log_write(f"[red]Second argument must be one of: {', '.join([mode for mode in CLICK_MODES])}")
+            return
+
+        if args[0] == "left":
+            self.settings.left_click_mode_name = args[1]
+        else:
+            self.settings.right_click_mode_name = args[1]
+
+        self.log_write(f"{args[0].capitalize()} click mode set to [blue]{args[1]}")
 
     def command_precision(self, value: int) -> None:
         self.precision = value
@@ -233,7 +251,7 @@ class FractalisticApp(App):
 
     def command_screenshot_threads(self, value: int) -> None:
         self.settings.screenshot_threads = value
-        self.log_write(f"Screensdhot thread count set to [blue]{self.settings.threads}")
+        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_size}")
 
     # We cant directly set command_list because we couldn't reference command methods correctly
     def set_command_list(self) -> None:
@@ -292,13 +310,14 @@ class FractalisticApp(App):
                     "If no arguments are given, just print out the current position. "
                     "Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats.")
             ),
-            "click_pos": Command(
-                funct=self.command_click_pos,
-                help="If enabled, set the current position to the position of RIGHT mouse clicks on the canvas.",
-                accepted_arg_counts=[0, 1],
+            "click_mode": Command(
+                funct=self.command_click_mode,
+                help="Set the action to take when left or right clicking on the canvas.",
+                accepted_arg_counts=[0, 2],
                 extra_help=(
-                    "[green]Usage : on/off\nUsage : no args[/green]\n"
-                    "If no argument is given, print out the current state. Else, enable or disable click_pos mode.")
+                    "[green]Usage : [left/right] [mode]\nUsage : no args[/green]\n"
+                    "If no argument is given, print out the current click modes and the available modes. "
+                    "Else, set the left/right click action to \\[mode].")
             ),
             "capture_fit": Command(
                 funct=self.command_capture_fit,
@@ -443,8 +462,6 @@ class FractalisticApp(App):
                 self.log_write,
                 f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}")
 
-            sleep(1)
-
         self.progress_bar.add_class("hidden")
         self.container.remove_class("hidden")
 
@@ -500,6 +517,16 @@ class FractalisticApp(App):
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
 
     # ---------- UTILS
+
+    def set_marker(self, pos):
+        if self.settings.marker_pos is not None:
+            c_num = self.pos_to_c(self.settings.marker_pos)
+            divergence = self.get_divergence(c_num)
+            color = Color.parse("black") if divergence == -1 else self.selected_color(divergence)
+            self.canv.set_pixel(self.settings.marker_pos.x, self.settings.marker_pos.y, color)
+
+        self.settings.marker_pos = pos
+        self.canv.set_pixel(pos.x, pos.y, Color.parse("red"))
 
     def get_divergence_matrix(
             self, cell_size: mpc | None = None,
@@ -841,39 +868,49 @@ class FractalisticApp(App):
     def on_click(self, event: Click) -> None:
         if not self.ready:
             return
+
+        if event.y < 0 or event.y >= self.settings.canv_size.y \
+                or event.x < 0 or event.x >= self.settings.canv_size.x:
+            return
+
         # Right clicks
         if event.button == 3:
-            click_pos = Vec(event.x, event.y * 2 - 1)
-            c_num = self.pos_to_c(click_pos)
+            action = self.settings.right_click_mode_name
 
-            if self.settings.click_pos_enabled:
-                self.render_settings.screen_pos_on_plane = c_num
-                self.update_canv()
-                return
-            else:
-                self.settings.marker_pos = click_pos
-                divergence = self.get_divergence(c_num)
+        # Left clicks
+        elif event.button == 1:
+            action = self.settings.left_click_mode_name
+
+        click_pos = Vec(event.x, event.y * 2 - 1)
+        c_num = self.pos_to_c(click_pos)
+        divergence = self.get_divergence(c_num)
+
+        match action:
+            case "info":
+                self.set_marker(click_pos)
 
                 self.log_write([
                     "[on red] Click info ",
-                    f"Clicked at (c): {digits(c_num)}",
+                    f"Clicked at (c): {c_num}",
                     f"Clicked at (pos): {self.settings.marker_pos}",
                     f"Divergence: {divergence}",
                 ])
-
-        # [OTHER CLICKS]
-        elif event.button == 1 and self.selected_fractal.__name__ == "Julia":
-            # Hide the marker since the fractal has changed
-            self.remove_marker()
-
-            self.render_settings.julia_click = self.pos_to_c(Vec(event.x, event.y * 2))
-
-            self.log_write([
-                "[on red] Current Julia Set ",
-                f"{self.render_settings.julia_click:.4f}",
-            ])
-
-        self.update_canv()
+            case "julia":
+                # Hide the marker since the fractal has changed
+                self.remove_marker()
+                self.render_settings.julia_click = c_num
+                self.log_write([
+                    "[on red] Current Julia Set ",
+                    f"{self.render_settings.julia_click:.4f}",
+                ])
+                self.update_canv()
+            case "move":
+                self.render_settings.screen_pos_on_plane = c_num
+                self.update_canv()
+            case "zoom":
+                self.render_settings.screen_pos_on_plane = c_num
+                self.action_zoom("in")
+                self.update_canv()
 
     def compose(self):
         # Mount the footer and a progress bar

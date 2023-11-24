@@ -146,6 +146,8 @@ git push origin my-new-feature
 
 # Screenshots
 
+![Screenshot 0](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot0.png)
+
 ![Screenshot 1](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot1.png)
 
 ![Screenshot 3](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot3.png)
@@ -167,3 +169,7 @@ git push origin my-new-feature
 ![Screenshot 10](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot10.png)
 
 ![Screenshot 11](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot11.png)
+
+![Screenshot 12](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot12.png)
+
+![Screenshot 13](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot13.png)
