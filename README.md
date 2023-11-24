@@ -31,12 +31,10 @@ If you want to install the application securely, in an isolated environment, you
 pipx install fractalistic
 ```
 
-
 Now start the program with:
 ```bash
 fractalistic
 ```
-
 
 # Features 🌟
 
@@ -55,7 +53,10 @@ fractalistic
 - 🎨 Change color palette
 - 🔢 Custom decimal precision
 - 📸 High definition screenshots
-
+- 📜 Save and load state
+- 📊 Show average divergence
+- 📌 Click to show coordinates and divergence
+- 🏃 Multithreaded rendering
 
 # Roadmap
 
@@ -64,6 +65,7 @@ Possible features to add later:
 - [ ] Custom mandelbrot/burning ship starting value or exponent
 - [ ] app.log_error(), etc utility functions
 - [ ] New mandelbrot variants
+- [ ] Click modes (zoom, move, etc)
 
 Commands:
 - [ ] Command to show current pos, zoom, etc
@@ -71,6 +73,24 @@ Commands:
 # Development 
 
 Please, open an issue if you have any suggestion or if you found a bug. I will try to fix it as soon as possible. If you want to contribute, open an empty pull request and explain what you want to do, wait for me to approve it and then you can start working on it.
+
+### Development environment
+
+**For this project, I recomment using vscode with Flake8 (linting/type-checking).**
+
+You will need to fork this repo and clone it locally. 
+
+```bash
+# Replace SkwalExe with your github username
+git clone https://github.com/SkwalExe/fractalistic
+cd fractalistic
+```
+
+Then, install the project and the dependencies locally 
+
+```bash
+pip install .
+```
 
 ### Running the app in textual dev mode
 
@@ -92,6 +112,37 @@ pip install textual-dev
 # You must already be cd-ed into the repo directory
 TEXTUAL=devtools,debug python3 -m fractalistic
 ```
+
+You will be able to see the app logs, and print to the textual console with the `textual.log` function.
+
+### Creating a pull request
+
+- First, create a new branch with a name that describes your feature/fix.
+
+```bash
+git checkout -b my-new-feature
+```
+
+**You can now start working on your feature/fix.**
+
+- Before commiting, you should run the linter and type-checker to make sure your code is clean.
+
+```bash
+# 'pip install flake8' if you don't have it
+flake8 fractalistic
+```
+
+**If you get any error, you should fix it before commiting.**
+
+- Now, commit your changes and push them to your fork.
+
+```bash
+git add .
+git commit -m "My new feature"
+git push origin my-new-feature
+```
+
+- Finally, open a pull request on github from your fork's page. I should receive a notification and I will review your changes.
 
 # Screenshots
 
