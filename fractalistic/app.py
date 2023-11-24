@@ -5,6 +5,7 @@ from textual.binding import Binding
 from textual.events import Click
 from textual.color import Color
 from textual import on
+from textual import log
 # ---------- Local imports
 from . import fractals, colors, __version__
 from .utils import (
@@ -16,6 +17,7 @@ from .click_modes import CLICK_MODES
 from .settings import Settings, RenderSettings
 from .command import Command, CommandIncrement, CommandIncrementArgParseResult
 from .fractal_canv import FractalCanv
+from .line_divergence_result import LineDivergenceResult
 # ---------- Other imports
 import os
 from PIL import Image
@@ -23,13 +25,13 @@ from typing import Callable
 import asyncio
 from multiprocessing import Pool, Manager
 from rich.rule import Rule
-from time import monotonic, time
+from time import monotonic, time, sleep
 from gmpy2 import mpc, mpfr
 from copy import deepcopy
 import gmpy2
 import toml
 from math import ceil
-import itertools
+from typing import Generator
 # --------------------
 
 
@@ -441,26 +443,32 @@ class FractalisticApp(App):
             update_loading_bar=True,
             threads=self.settings.screenshot_threads)
 
-        # If the screenshot was cancelled, None is returned
+        for line in result:
+            # None is returned if the screenshot was cancelled
+            if line is None:
+                break
+
+            for (x, divergence) in enumerate(line.values):
+                # Get a color from the result
+                if divergence == -1:
+                    color = Color.parse("black")
+                else:
+                    color = self.selected_color(divergence)
+
+                image.putpixel((x, line.y), color.rgb)
+
         # If the screenshot wasn't cancelled, save the screenshot to a file,
         # put a message in the log panel and wait one second to
         # allow the user to see that the operation is finished successfully.
         if not self.cancel_screenshot:
-            for (y, line) in enumerate(result):
-                for (x, divergence) in enumerate(line):
-                    # Get a color from the result
-                    if divergence == -1:
-                        color = Color.parse("black")
-                    else:
-                        color = self.selected_color(divergence)
-
-                    image.putpixel((x, y), color.rgb)
-
             save_to = f"{self.selected_fractal.__name__}_screenshot_{int(time())}.png"
             image.save(save_to)
             self.call_after_refresh(
                 self.log_write,
                 f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}")
+
+            # Wait one second to allow the user to see that the operation is finished successfully
+            sleep(1)
 
         self.progress_bar.add_class("hidden")
         self.container.remove_class("hidden")
@@ -532,7 +540,7 @@ class FractalisticApp(App):
             self, cell_size: mpc | None = None,
             size: Vec | None = None,
             threads: int | None = None,
-            update_loading_bar: bool = False) -> list[list[int]]:
+            update_loading_bar: bool = False) -> Generator[LineDivergenceResult, None, None]:
 
         if threads is None:
             threads = self.settings.threads
@@ -556,40 +564,39 @@ class FractalisticApp(App):
         self.current_process_pool = Pool(processes=threads)
 
         # Start the rendering processes
-        divergence_matrices_async = self.current_process_pool.starmap_async(
+        self.current_process_pool.starmap_async(
             get_divergence_matrix,
             [(chunk[0], chunk[1], render_settings, size, queue) for chunk in chunks],
             chunksize=1)
 
         rendered_lines = 0
-        while not divergence_matrices_async.ready():
+        finished_process_count = 0
+        while not finished_process_count == threads:
 
             # Return None if the screenshot was cancelled, and terminate the processes
             if self.cancel_screenshot:
                 self.current_process_pool.terminate()
                 return None
 
-            while not queue.empty() and update_loading_bar:
-                rendered_lines += 1
+            rendered_lines += 1
 
-                # A message is added to the queue everytime a line is rendered
-                queue.get()
+            # A message is added to the queue everytime a line is rendered
+            line = queue.get()
 
-                # Make the progress bar advance every 10 lines
-                if rendered_lines % 10 == 0:
-                    self.progress_bar.advance()
+            # None is added to the queue when a process is finished
+            if line is None:
+                finished_process_count += 1
+                continue
 
-        # When the rendering is finished, get the result from each process
-        divergence_matrices = divergence_matrices_async.get()
+            yield line
 
-        # Flatten the array of each process result into one big array
-        result = list(itertools.chain.from_iterable(divergence_matrices))
+            # Make the progress bar advance every 10 lines
+            if rendered_lines % 10 == 0 and update_loading_bar:
+                self.progress_bar.advance()
 
         # Close the pool of processes
         self.current_process_pool.close()
         self.current_process_pool = None
-
-        return result
 
     def load_state(self, filename: str) -> None:
         try:
@@ -823,26 +830,24 @@ class FractalisticApp(App):
         self.renders += 1
         start = monotonic()
 
-        result = self.get_divergence_matrix()
-        # If result is none, it means ctrl+c was pressed during the rendering
-        # then the program is exiting and we don't care anymore about updating the canvas
-        if result is None:
-            return
-
         # Used to get the average divergence of the current render
         divergence_sum = 0
         term_count = 0
 
         with self.batch_update():
-            for (y, line) in enumerate(result):
-                for (x, divergence) in enumerate(line):
+            for line in self.get_divergence_matrix():
+                # If none is returned, most likely the program is exiting
+                if line is None:
+                    return
+
+                for (x, divergence) in enumerate(line.values):
 
                     # If there is a marker and the current x and y corresponds the its position
                     # make the pixel red and go to the next pixel
                     if self.settings.marker_pos is not None \
                             and x == self.settings.marker_pos.x \
-                            and y == self.settings.marker_pos.y:
-                        self.canv.set_pixel(x, y, Color.parse("red"))
+                            and line.y == self.settings.marker_pos.y:
+                        self.canv.set_pixel(x, line.y, Color.parse("red"))
                         continue
 
                     if divergence != -1:
@@ -851,7 +856,7 @@ class FractalisticApp(App):
 
                     # Get a color from the result
                     color = Color.parse("black") if divergence == -1 else self.selected_color(divergence)
-                    self.canv.set_pixel(x, y, color)
+                    self.canv.set_pixel(x, line.y, color)
 
         self.average_divergence = divergence_sum / term_count if term_count > 0 else 0
         self.current_zoom_level = f"{4 / (self.render_settings.cell_size * self.settings.canv_size.x):.4e}"
@@ -931,6 +936,9 @@ class FractalisticApp(App):
         self.rich_log.border_title = "Logs Panel"
 
     async def on_ready(self) -> None:
+        # Just so that flake8 doesn't complain about log() being unused
+        log("Hellooo <3")
+
         self.set_command_list()
 
         # Mount the log panel and the command input in the right container

@@ -1,4 +1,4 @@
-# 1.3.0 - Unreleased
+# 1.3.0 - 2023-11-24
 
 ### Added
 - Zoom out click mode
@@ -6,6 +6,9 @@
 ### Fixed
 - Prevent clicks outside of the canvas to be registered as canvas clicks
 - Weird zoom in behaviour
+  
+### Improved
+- I made the rendering process a lot faster with a new algorithm, its my first time with multiprocessing
 
 # 1.2.0 - 2023-11-24
 
