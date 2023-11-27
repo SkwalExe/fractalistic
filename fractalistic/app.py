@@ -91,73 +91,7 @@ class FractalisticApp(App):
 
     # ---------- COMMANDS
 
-    def command_help(self, args) -> None:
-        if len(args) == 0:
-            command_desc = [
-                f"- [blue]{name}[/blue]: {self.command_list[name].help}"
-                for name in self.command_list
-            ]
-
-            self.log_write([
-                "[on blue]Available commands",
-                *command_desc,
-                "[green]Use 'help command_name' to get more info about a command"
-            ])
-
-        elif len(args) == 1:
-            command = self.get_command(args[0])
-            if command is None:
-                return
-
-            self.log_write([
-                f"[on blue]{args[0]} command",
-                command.help,
-                command.extra_help
-            ])
-
-    def command_clear(self, args) -> None:
-        self.rich_log.clear()
-        self.print_log_bar = False
-
-    def command_quit(self, args) -> None:
-        self.log_write("Quitting...")
-        self.exit()
-
-    def command_version(self, args) -> None:
-        self.log_write(f"Fractalistic version: [on blue]{__version__}")
-
-    def command_capture(self, args) -> None:
-        if len(args) == 0:
-            self.action_screenshot()
-        elif len(args) == 2:
-            try:
-                width = int(args[0])
-                height = int(args[1])
-            except ValueError:
-                self.log_write("Width and height must be integers")
-                return
-
-            if width <= 0 or height <= 0:
-                self.log_write("Width and height must be positive")
-                return
-
-            self.action_screenshot(Vec(width, height))
-
-    def command_capture_fit(self, args) -> None:
-        if len(args) == 0:
-            self.action_screenshot(self.get_screenshot_size_fit())
-        elif len(args) == 1:
-            try:
-                quality = int(args[0])
-            except ValueError:
-                self.log_write("Quality must be an integer")
-                return
-
-            if quality <= 0:
-                self.log_write("Quality must be positive")
-                return
-
-            self.action_screenshot(self.get_screenshot_size_fit(quality))
+    # ========== increment type commands
 
     def command_max_iter(self, value: int) -> None:
         self.render_settings.max_iter = value
@@ -173,9 +107,93 @@ class FractalisticApp(App):
         self.settings.move_distance = value
         self.log_write(f"Move distance set to [blue]{self.settings.move_distance}")
 
-    def command_pos(self, args) -> None:
+    def command_precision(self, value: int) -> None:
+        self.precision = value
+
+        self.log_write(f"Numeric precision set to [blue]{value}")
+        self.update_canv()
+
+    def command_threads(self, value: int) -> None:
+        self.settings.threads = value
+        self.log_write(f"Rendering thread count set to [blue]{self.settings.threads}")
+
+    def command_screenshot_threads(self, value: int) -> None:
+        self.settings.screenshot_threads = value
+        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_threads}")
+
+    # ========== other commands
+
+    def command_help(self, args, argc: int) -> None:
+        if argc == 0:
+            command_desc = [
+                f"- [blue]{name}[/blue]: {self.command_list[name].help}"
+                for name in self.command_list
+            ]
+
+            self.log_write([
+                "[on blue]Available commands",
+                *command_desc,
+                "[green]Use 'help command_name' to get more info about a command"
+            ])
+
+        elif argc == 1:
+            command = self.get_command(args[0])
+            if command is None:
+                return
+
+            self.log_write([
+                f"[on blue]{args[0]} command",
+                command.help,
+                command.extra_help
+            ])
+
+    def command_clear(self, args, argc: int) -> None:
+        self.rich_log.clear()
+        self.print_log_bar = False
+
+    def command_quit(self, args, argc: int) -> None:
+        self.log_write("Quitting...")
+        self.exit()
+
+    def command_version(self, args, argc: int) -> None:
+        self.log_write(f"Fractalistic version: [on blue]{__version__}")
+
+    def command_capture(self, args, argc: int) -> None:
+        if argc == 0:
+            self.action_screenshot()
+        elif argc == 2:
+            try:
+                width = int(args[0])
+                height = int(args[1])
+            except ValueError:
+                self.log_write("Width and height must be integers")
+                return
+
+            if width <= 0 or height <= 0:
+                self.log_write("Width and height must be positive")
+                return
+
+            self.action_screenshot(Vec(width, height))
+
+    def command_capture_fit(self, args, argc: int) -> None:
+        if argc == 0:
+            self.action_screenshot(self.get_screenshot_size_fit())
+        elif argc == 1:
+            try:
+                quality = int(args[0])
+            except ValueError:
+                self.log_write("Quality must be an integer")
+                return
+
+            if quality <= 0:
+                self.log_write("Quality must be positive")
+                return
+
+            self.action_screenshot(self.get_screenshot_size_fit(quality))
+
+    def command_pos(self, args, argc: int) -> None:
         # If no args are provided, just show the current position
-        if len(args) == 0:
+        if argc == 0:
             self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane}")
             return
 
@@ -194,10 +212,10 @@ class FractalisticApp(App):
         # Update canvas since we just moved
         self.update_canv()
 
-    def command_click_mode(self, args: list[str]) -> None:
+    def command_click_mode(self, args: list[str], argc: int) -> None:
         # If no args are provided, print the current modes
         # and the available modes.
-        if len(args) == 0:
+        if argc == 0:
             self.log_write([
                 "[purple]Available modes:[/purple]"
                 + ''.join([f'\n- [blue]{mode}[/blue]: {CLICK_MODES[mode].description}' for mode in CLICK_MODES]),
@@ -222,14 +240,8 @@ class FractalisticApp(App):
 
         self.log_write(f"{args[0].capitalize()} click mode set to [blue]{args[1]}")
 
-    def command_precision(self, value: int) -> None:
-        self.precision = value
-
-        self.log_write(f"Numeric precision set to [blue]{value}")
-        self.update_canv()
-
-    def command_save_state(self, args) -> None:
-        if len(args) == 0:
+    def command_save_state(self, args, argc: int) -> None:
+        if argc == 0:
             filename = f"{self.selected_fractal.__name__}_state_{int(time())}.toml"
         else:
             filename = args[0]
@@ -243,75 +255,109 @@ class FractalisticApp(App):
 
         self.log_write(f"State saved to [blue]{filename}")
 
-    def command_load_state(self, args) -> None:
+    def command_load_state(self, args, argc: int) -> None:
         self.load_state(args[0])
         self.update_canv()
 
-    def command_threads(self, value: int) -> None:
-        self.settings.threads = value
-        self.log_write(f"Rendering thread count set to [blue]{self.settings.threads}")
+    def command_exp_type(self, args, argc: int) -> None:
+        if argc == 0:
+            self.log_write([
+                f"Julia exponent type: [blue]{type(self.render_settings.julia_exponent).__name__}[/blue]",
+                f"Mandelbrot exponent type: [blue]{type(self.render_settings.mandelbrot_exponent).__name__}"
+            ])
+            return
 
-    def command_screenshot_threads(self, value: int) -> None:
-        self.settings.screenshot_threads = value
-        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_threads}")
+        if args[0] not in ["julia", "mandel"]:
+            self.log_write("[red]First argument must be 'julia' or 'mandel'")
+            return
+
+        if args[1] not in ["int", "float", "mpc"]:
+            self.log_write("[red]Second argument must be 'int', 'float' or 'mpc'")
+            return
+
+        new_value = eval(args[1])(int(2))
+
+        if args[0] == "julia":
+            self.render_settings.julia_exponent = new_value
+        else:
+            self.render_settings.mandelbrot_exponent = new_value
+
+        self.log_write(
+            f"{args[0].capitalize()} exponent type set to [purple]{args[1]}[/purple], "
+            "resetting the starting value to 2")
+
+        self.update_canv()
+
+    def command_set_exp(self, args, argc: int) -> None:
+        if argc == 0:
+            self.log_write([
+                f"Julia exponent: [blue]{type(self.render_settings.julia_exponent).__name__}"
+                f"({self.render_settings.julia_exponent})",
+                f"Mandelbrot exponent: [blue]{type(self.render_settings.mandelbrot_exponent).__name__}"
+                f"({self.render_settings.mandelbrot_exponent})"
+            ])
+            return
+
+        fract = args[0]
+        real = args[1]
+        imag = None if argc == 2 else args[2]
+
+        if fract not in ["julia", "mandel"]:
+            self.log_write("[red]First argument must be 'julia' or 'mandel'")
+            return
+
+        exp_type = type(self.render_settings.__getattribute__(
+                    "julia_exponent" if fract == "julia" else "mandelbrot_exponent"))
+
+        try:
+            real_parsed = exp_type(real)
+        except ValueError:
+            self.log_write(f"Real part must be a valid {type(self.render_settings.julia_exponent).__name__}")
+            return
+
+        # If an imag part was provided
+        if exp_type is mpc:
+            if imag is None:
+                self.log_write(
+                    "Imaginary part is required because the exponent type is mpc. "
+                    "If you don't want to use complex numbers, "
+                    "change the exponent type to int or float with the [blue]exp_type[/blue] command.")
+                return
+            imag_parsed = mpc(imag)
+            self.render_settings.__setattr__(
+                "julia_exponent" if fract == "julia" else "mandelbrot_exponent",
+                mpc(real_parsed, imag_parsed))
+        else:
+            if imag is not None:
+                self.log_write("Imaginary part ignored because the exponent type is not mpc")
+            # TODO: improve this sht
+            self.render_settings.__setattr__(
+                "julia_exponent" if fract == "julia" else "mandelbrot_exponent",
+                real_parsed)
+        self.update_canv()
 
     # We cant directly set command_list because we couldn't reference command methods correctly
+    # Please order the commands alphabetically
     def set_command_list(self) -> None:
         self.command_list = {
-            "max_iter": CommandIncrement(
-                funct=self.command_max_iter,
-                help="Change the maximum number of iterations used to determine if a point converges or not.",
-                app_attribute="settings.render_settings.max_iter",
-                min_value=6,
-            ),
-            "move_dist": CommandIncrement(
-                funct=self.command_move_dist,
-                help="Change the distance to move when a key is pressed, in canvas cells.",
-                app_attribute="settings.move_distance",
-                min_value=1
-            ),
-            "precision": CommandIncrement(
-                funct=self.command_precision,
-                help="Fine-tune numeric precision by specifying the desired bit length for numeric values",
-                app_attribute="precision",
-                min_value=5
-            ),
-            "threads": CommandIncrement(
-                funct=self.command_threads,
-                help="Change the number of threads used for rendering",
-                app_attribute="settings.threads",
-                min_value=1
-            ),
-            "screenshot_threads": CommandIncrement(
-                funct=self.command_screenshot_threads,
-                help="Change the number of threads used for rendering screenshots",
-                app_attribute="settings.screenshot_threads",
-                min_value=1
-            ),
-            "zoom_lvl": CommandIncrement(
-                funct=self.command_zoom_lvl,
-                help="Change the zoom factor (intensity) when s or d is pressed, in percent.",
-                app_attribute="settings.zoom_intensity",
-                min_value=1,
-                max_value=100
-            ),
             "capture": Command(
                 funct=self.command_capture,
                 help="Take a high quality screenshot",
                 accepted_arg_counts=[0, 2],
                 extra_help=(
                     "[green]Usage : \\[width] \\[height]\nUsage : no args[/green]\n"
-                    "If no width and height are specified, the command line settings are used.")
-            ),
-            "pos": Command(
-                funct=self.command_pos,
-                help="Set the position to a specific point in the complex plane.",
-                accepted_arg_counts=[0, 2],
+                    "If no width and height are specified, the command line settings are used.")),
+            "capture_fit": Command(
+                funct=self.command_capture_fit,
+                help="Take a high quality screenshot that fits the size of the canvas.",
+                accepted_arg_counts=[0, 1],
                 extra_help=(
-                    "[green]Usage : \\[real] \\[imag]\nUsage : no args[/green]\n"
-                    "If no arguments are given, just print out the current position. "
-                    "Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats.")
-            ),
+                    "[green]Usage : \\[quality]\nUsage : no arg.[/green]\n"
+                    "If no quality is specified, the command line settings are used.")),
+            "clear": Command(
+                funct=self.command_clear,
+                help="Clear the log panel",
+                accepted_arg_counts=[0]),
             "click_mode": Command(
                 funct=self.command_click_mode,
                 help="Set the action to take when left or right clicking on the canvas.",
@@ -319,34 +365,91 @@ class FractalisticApp(App):
                 extra_help=(
                     "[green]Usage : [left/right] [mode]\nUsage : no args[/green]\n"
                     "If no argument is given, print out the current click modes and the available modes. "
-                    "Else, set the left/right click action to \\[mode].")
-            ),
-            "capture_fit": Command(
-                funct=self.command_capture_fit,
-                help="Take a high quality screenshot that fits the size of the canvas.",
-                accepted_arg_counts=[0, 1],
+                    "Else, set the left/right click action to \\[mode].")),
+            "exp_type": Command(
+                funct=self.command_exp_type,
+                help="Set the data type used for Julia and Mandelbrot exponents.",
+                accepted_arg_counts=[0, 2],
                 extra_help=(
-                    "[green]Usage : \\[quality]\nUsage : no arg.[/green]\n"
-                    "If no quality is specified, the command line settings are used.")
-            ),
+                    "[green]Usage : \\[mandel/julia] \\[int/float/mpc]\nUsage : no args[/green]\n"
+                    "If no argument is given, print out the current types. "
+                    "Else, set the mandel/julia exponent type to \\[type].\n"
+                    "- It is important to use the simplest type possible because it has a huge impact on performance.\n"
+                    "- \\[mpc] is the complex type from the gmpy2 library.\n"
+                    "- If you change the type, the exponent value will be reset to 2.\n"
+                    "- [red]Be aware that using float or mpc types will make renders much slower.")),
+            "help": Command(
+                funct=self.command_help,
+                help="Show the help message",
+                accepted_arg_counts=[0, 1]),
+            "load_state": Command(
+                funct=self.command_load_state,
+                help="Load a state from a file.",
+                accepted_arg_counts=[1],
+                extra_help="[green]Usage : \\[filename][/green]"),
+            "max_iter": CommandIncrement(
+                funct=self.command_max_iter,
+                help="Change the maximum number of iterations used to determine if a point converges or not.",
+                app_attribute="settings.render_settings.max_iter",
+                min_value=6,),
+            "move_dist": CommandIncrement(
+                funct=self.command_move_dist,
+                help="Change the distance to move when a key is pressed, in canvas cells.",
+                app_attribute="settings.move_distance",
+                min_value=1),
+            "pos": Command(
+                funct=self.command_pos,
+                help="Set the position to a specific point in the complex plane.",
+                accepted_arg_counts=[0, 2],
+                extra_help=(
+                    "[green]Usage : \\[real] \\[imag]\nUsage : no args[/green]\n"
+                    "If no arguments are given, just print out the current position. "
+                    "Else, go to the given position. \\[real] and \\[imag] must be valid integers or floats.")),
+            "precision": CommandIncrement(
+                funct=self.command_precision,
+                help="Fine-tune numeric precision by specifying the desired bit length for numeric values",
+                app_attribute="precision",
+                min_value=5),
+            "quit": Command(
+                funct=self.command_quit,
+                help="Exit the app",
+                accepted_arg_counts=[0]),
+            "screenshot_threads": CommandIncrement(
+                funct=self.command_screenshot_threads,
+                help="Change the number of threads used for rendering screenshots",
+                app_attribute="settings.screenshot_threads",
+                min_value=1),
             "save_state": Command(
                 funct=self.command_save_state,
                 help="Save the current state of the app to a file (current fractal, color, position, zoom, etc).",
                 accepted_arg_counts=[0, 1],
                 extra_help=(
                     "[green]Usage : \\[filename]\nUsage : no args[/green]\n"
-                    "If no filename is specified, one will be generated automatically.")
-            ),
-            "load_state": Command(
-                funct=self.command_load_state,
-                help="Load a state from a file.",
-                accepted_arg_counts=[1],
-                extra_help="[green]Usage : \\[filename][/green]"
-            ),
-            "version": Command(self.command_version, "Show the version number", [0]),
-            "clear": Command(self.command_clear, "Clear the log panel", [0]),
-            "quit": Command(self.command_quit, "Exit the app", [0]),
-            "help": Command(self.command_help, "Show the help message", [0, 1])
+                    "If no filename is specified, one will be generated automatically.")),
+            "set_exp": Command(
+                funct=self.command_set_exp,
+                help="Set the julia/mandel exponent value.",
+                accepted_arg_counts=[0, 2, 3],
+                extra_help=(
+                    "[green]Usage : \\[mandel/julia] \\[real] \\[?imag]\nUsage : no args[/green]\n"
+                    "If no argument is given, print out the current exponent values. "
+                    "Else, set the mandel/julia exponent value to \\[real] + \\[imag]j.\n"
+                    "Providing the imaginary part is only required if the exponent type is \\[mpc].")),
+            "threads": CommandIncrement(
+                funct=self.command_threads,
+                help="Change the number of threads used for rendering",
+                app_attribute="settings.threads",
+                min_value=1),
+            "version": Command(
+                funct=self.command_version,
+                help="Show the version number",
+                accepted_arg_counts=[0]),
+            "zoom_lvl": CommandIncrement(
+                funct=self.command_zoom_lvl,
+                help="Change the zoom factor (intensity) when s or d is pressed, in percent.",
+                app_attribute="settings.zoom_intensity",
+                min_value=1,
+                max_value=100),
         }
 
     # ---------- ACTIONS
@@ -724,7 +827,7 @@ class FractalisticApp(App):
                 self.log_write(value.error_message)
                 return
         else:
-            command.funct(args)
+            command.funct(args, len(args))
 
     @property
     def selected_fractal(self) -> FractalBase:
@@ -925,6 +1028,13 @@ class FractalisticApp(App):
                 self.update_canv()
             case "zoom_out":
                 self.zoom_at_pos(click_pos, "out")
+                self.update_canv()
+            case "mb_start":
+                self.render_settings.mandelbrot_starting_value = c_num
+                self.log_write([
+                    "[on red] Current Mandelbrot Set starting value ",
+                    f"{self.render_settings.mandelbrot_starting_value:.4f}",
+                ])
                 self.update_canv()
 
     def compose(self):

@@ -13,9 +13,9 @@ class Mandelbrot(FractalBase):
     @staticmethod
     def get(point: mpc, settings: RenderSettings) -> int:
         i = 0
-        z = mpc(0, 0)
+        z = settings.mandelbrot_starting_value
         while abs(z) < 2 and i < settings.max_iter:
-            z = z*z + point
+            z = z.__pow__(settings.mandelbrot_exponent) + point
             i += 1
 
         if i == settings.max_iter:

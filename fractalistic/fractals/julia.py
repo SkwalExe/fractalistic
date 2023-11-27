@@ -6,7 +6,7 @@ from gmpy2 import mpc
 class Julia(FractalBase):
     """
     With U0 being the point in the complex plane,
-    Un+1 = Un² - 1
+    Un+1 = Un² - C
     """
     message = "Click a point in the complex plane to generate the corresponding Julia set."
 
@@ -15,7 +15,7 @@ class Julia(FractalBase):
         i = 0
 
         while abs(point) < 4 and i < settings.max_iter:
-            point = point*point - settings.julia_click
+            point = point.__pow__(settings.julia_exponent) - settings.julia_click
             i += 1
 
         if i == settings.max_iter:
