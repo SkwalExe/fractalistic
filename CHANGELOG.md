@@ -1,6 +1,16 @@
-# 1.4.0 - Unreleased
+# 2.0.0 - 2023-11-27
+
+### Added
+- New render parameters
+- Julia/Mandelbrot custom exponents
+- Custom Mandelbrot start point
+
+### Breaking changes
+- State files are not compatible with previous versions.
+- New state file format for better performance and compatibility with future versions.
 
 ### Fixed
+- Bug with middle clicks
 - Fixed typos
 
 # 1.3.0 - 2023-11-24

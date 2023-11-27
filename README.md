@@ -62,13 +62,18 @@ fractalistic
 
 Possible features to add later:
 - [ ] Splash screen
-- [ ] Custom mandelbrot/burning ship starting value or exponent
 - [ ] app.log_error(), etc utility functions
 - [ ] New mandelbrot variants
-- [ ] Click modes (zoom, move, etc)
 
 Commands:
 - [ ] Command to show current pos, zoom, etc
+
+# How to migrate your state files to >= 2.0.0
+
+First open your toml state file in a text editor. 
+You can open the screen position in the app by using the `pos` command, and copy/pasting the real and imaginary values.
+Then, select the correct fractal, color palette, precision and max_iter values in the app, 
+and use the `save_state` command to save your updated state file.
 
 # Development 
 

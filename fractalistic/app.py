@@ -9,12 +9,11 @@ from textual import log
 # ---------- Local imports
 from . import fractals, colors, __version__
 from .utils import (
-    SRC_DIR, get_divergence_matrix, set_precision, pos_to_c,
-    get_fractal_index_from_name, get_color_index_from_name)
+    SRC_DIR, get_divergence_matrix, set_precision, pos_to_c)
 from .fractals.fractal_base import FractalBase
 from .vec import Vec
 from .click_modes import CLICK_MODES
-from .settings import Settings, RenderSettings
+from .settings import Settings, RenderSettings, StateInfo
 from .command import Command, CommandIncrement, CommandIncrementArgParseResult
 from .fractal_canv import FractalCanv
 from .line_divergence_result import LineDivergenceResult
@@ -29,7 +28,7 @@ from time import monotonic, time, sleep
 from gmpy2 import mpc, mpfr
 from copy import deepcopy
 import gmpy2
-import toml
+import pickle
 from math import ceil
 from typing import Generator
 # --------------------
@@ -242,13 +241,15 @@ class FractalisticApp(App):
 
     def command_save_state(self, args, argc: int) -> None:
         if argc == 0:
-            filename = f"{self.selected_fractal.__name__}_state_{int(time())}.toml"
+            filename = f"{self.selected_fractal.__name__}_state_{int(time())}.fc"
         else:
             filename = args[0]
 
         try:
-            with open(filename, "w") as f:
-                f.write(toml.dumps(self.get_state()))
+            with open(filename, "wb") as f:
+                state_info = StateInfo()
+                state_info.render_settings = self.render_settings
+                pickle.dump(state_info, f)
         except OSError as e:
             self.log_write(f"Cannot write to file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
             return
@@ -703,51 +704,22 @@ class FractalisticApp(App):
 
     def load_state(self, filename: str) -> None:
         try:
-            with open(filename, "r") as f:
+            with open(filename, "rb") as f:
                 try:
-                    state = toml.loads(f.read())
-
-                except toml.TomlDecodeError as e:
-                    self.log_write(f"Cannot decode file '{filename}'. [red]{e}")
+                    state_file: StateInfo = pickle.load(f)
+                    self.settings.render_settings = state_file.render_settings
+                except Exception as e:
+                    self.log_write(
+                        f"[red]Cannot decode file '{filename}'. "
+                        "After version 2.0.0, the state file format changed.[/red]"
+                        f"\nError: {e}")
                     return
 
         except OSError as e:
             self.log_write(f"Cannot read file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
             return
 
-        try:
-            self.render_settings.fractal_index = get_fractal_index_from_name(state["fractal"])
-            self.render_settings.color_renderer_index = get_color_index_from_name(state["color"])
-            self.render_settings.max_iter = int(state["max_iter"])
-            self.precision = self.render_settings.wanted_numeric_precision
-            self.render_settings.cell_size = mpfr(state["cell_size"])
-            screen_pos_on_plane_real = mpfr(state["screen_pos_on_plane_real"])
-            screen_pos_on_plane_imag = mpfr(state["screen_pos_on_plane_imag"])
-            self.render_settings.screen_pos_on_plane = mpc(
-                screen_pos_on_plane_real, screen_pos_on_plane_imag)
-            julia_click_real = mpfr(state["julia_click_real"])
-            julia_click_imag = mpfr(state["julia_click_imag"])
-            self.render_settings.julia_click = mpc(julia_click_real, julia_click_imag)
-
-        except KeyError as e:
-            self.log_write(f"Cannot load state from file '{filename}'. [red]Missing key: {e}")
-            return
-
         self.log_write(f"State loaded from [blue]{filename}[/blue]")
-
-    def get_state(self) -> dict[str, str]:
-        return {
-            "fractal": self.selected_fractal.__name__,
-            "color": self.selected_color.__name__,
-            "max_iter": str(self.render_settings.max_iter),
-            "precision": str(self.render_settings.wanted_numeric_precision),
-            "cell_size": self.render_settings.cell_size.__format__(".2048g"),
-            "screen_pos_on_plane_real": self.render_settings.screen_pos_on_plane.real.__format__(".2048g"),
-            "screen_pos_on_plane_imag": self.render_settings.screen_pos_on_plane.imag.__format__(".2048g"),
-            "julia_click_real": self.render_settings.julia_click.real.__format__(".2048g"),
-            "julia_click_imag": self.render_settings.julia_click.imag.__format__(".2048g"),
-            "version": __version__,
-        }
 
     def reset_position(self) -> None:
         # remove the marker
@@ -989,10 +961,11 @@ class FractalisticApp(App):
                 or event.x < 0 or event.x >= self.settings.canv_size.x:
             return
 
+        action = "none"
+
         # Right clicks
         if event.button == 3:
             action = self.settings.right_click_mode_name
-
         # Left clicks
         elif event.button == 1:
             action = self.settings.left_click_mode_name

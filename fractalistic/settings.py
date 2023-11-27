@@ -1,6 +1,7 @@
 from gmpy2 import mpfr, mpc
 from .vec import Vec
 from .click_modes import ClickMode, CLICK_MODES
+from . import __version__
 
 
 class RenderSettings():
@@ -94,3 +95,8 @@ class Settings():
     screenshot_quality: int = 20
 
     fit_screenshots: bool = False
+
+
+class StateInfo():
+    version = __version__
+    render_settings: RenderSettings
