@@ -4,6 +4,11 @@
 - Inverse mandelbrot set
 - `fractal` command
 - `color` command
+- Custom burning ship exponent
+
+### Fixed
+- Bug with custom exponents
+- Errors in help messages
 
 # 2.0.0 - 2023-11-27
 

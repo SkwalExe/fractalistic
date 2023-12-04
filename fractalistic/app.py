@@ -211,28 +211,34 @@ class FractalisticApp(App):
         if argc == 0:
             self.log_write([
                 f"Julia exponent type: [blue]{type(self.render_settings.julia_exponent).__name__}[/blue]",
-                f"Mandelbrot exponent type: [blue]{type(self.render_settings.mandelbrot_exponent).__name__}"
+                f"Mandelbrot exponent type: [blue]{type(self.render_settings.mandelbrot_exponent).__name__}",
+                f"Burning ship exponent type: [blue]{type(self.render_settings.burning_ship_exponent).__name__}"
             ])
             return
 
-        if args[0] not in ["julia", "mandel"]:
-            self.log_write("[red]First argument must be 'julia' or 'mandel'")
+        fract = args[0]
+        wanted_type = args[1]
+
+        if fract not in ["julia", "mandel", "burning_ship"]:
+            self.log_write("[red]First argument must be 'julia', 'mandel' or 'burning_ship'")
             return
 
-        if args[1] not in ["int", "float", "mpc"]:
+        if wanted_type not in ["int", "float", "mpc"]:
             self.log_write("[red]Second argument must be 'int', 'float' or 'mpc'")
             return
 
         new_value = eval(args[1])(int(2))
 
-        if args[0] == "julia":
-            self.render_settings.julia_exponent = new_value
-        else:
-            self.render_settings.mandelbrot_exponent = new_value
+        match fract:
+            case "julia":
+                self.render_settings.julia_exponent = new_value
+            case "mandel":
+                self.render_settings.mandelbrot_exponent = new_value
+            case "burning_ship":
+                self.render_settings.burning_ship_exponent = new_value
 
         self.log_write(
-            f"{args[0].capitalize()} exponent type set to [purple]{args[1]}[/purple], "
-            "resetting the starting value to 2")
+            f"{fract.capitalize()} exponent type set to [purple]{args[1]}[/purple] and reset to 2.")
 
         self.update_canv()
 
@@ -343,7 +349,9 @@ class FractalisticApp(App):
                 f"Julia exponent: [blue]{type(self.render_settings.julia_exponent).__name__}"
                 f"({self.render_settings.julia_exponent})",
                 f"Mandelbrot exponent: [blue]{type(self.render_settings.mandelbrot_exponent).__name__}"
-                f"({self.render_settings.mandelbrot_exponent})"
+                f"({self.render_settings.mandelbrot_exponent})",
+                f"Burning ship exponent: [blue]{type(self.render_settings.burning_ship_exponent).__name__}"
+                f"({self.render_settings.burning_ship_exponent})"
             ])
             return
 
@@ -351,17 +359,22 @@ class FractalisticApp(App):
         real = args[1]
         imag = None if argc == 2 else args[2]
 
-        if fract not in ["julia", "mandel"]:
-            self.log_write("[red]First argument must be 'julia' or 'mandel'")
+        if fract not in ["julia", "mandel", "burning_ship"]:
+            self.log_write("[red]First argument must be 'julia', 'mandel' or 'burning_ship")
             return
 
-        exp_type = type(self.render_settings.__getattribute__(
-                    "julia_exponent" if fract == "julia" else "mandelbrot_exponent"))
+        match fract:
+            case "julia":
+                exp_type = type(self.render_settings.julia_exponent)
+            case "mandel":
+                exp_type = type(self.render_settings.mandelbrot_exponent)
+            case "burning_ship":
+                exp_type = type(self.render_settings.burning_ship_exponent)
 
         try:
-            real_parsed = exp_type(real)
+            real_parsed = mpfr(real)
         except ValueError:
-            self.log_write(f"Real part must be a valid {type(self.render_settings.julia_exponent).__name__}")
+            self.log_write(f"Real part must be a valid {exp_type.__name__}")
             return
 
         # If an imag part was provided
@@ -372,17 +385,24 @@ class FractalisticApp(App):
                     "If you don't want to use complex numbers, "
                     "change the exponent type to int or float with the [blue]exp_type[/blue] command.")
                 return
-            imag_parsed = mpc(imag)
-            self.render_settings.__setattr__(
-                "julia_exponent" if fract == "julia" else "mandelbrot_exponent",
-                mpc(real_parsed, imag_parsed))
+            imag_parsed = mpfr(imag)
+            match fract:
+                case "julia":
+                    self.render_settings.julia_exponent = mpc(real_parsed, imag_parsed)
+                case "mandel":
+                    self.render_settings.mandelbrot_exponent = mpc(real_parsed, imag_parsed)
+                case "burning_ship":
+                    self.render_settings.burning_ship_exponent = mpc(real_parsed, imag_parsed)
         else:
             if imag is not None:
                 self.log_write("Imaginary part ignored because the exponent type is not mpc")
-            # TODO: improve this sht
-            self.render_settings.__setattr__(
-                "julia_exponent" if fract == "julia" else "mandelbrot_exponent",
-                real_parsed)
+            match fract:
+                case "julia":
+                    self.render_settings.julia_exponent = exp_type(real_parsed)
+                case "mandel":
+                    self.render_settings.mandelbrot_exponent = exp_type(real_parsed)
+                case "burning_ship":
+                    self.render_settings.burning_ship_exponent = exp_type(real_parsed)
         self.update_canv()
 
     def command_version(self, args, argc: int) -> None:
@@ -499,9 +519,9 @@ class FractalisticApp(App):
                 help="Set the julia/mandel exponent value.",
                 accepted_arg_counts=[0, 2, 3],
                 extra_help=(
-                    "[green]Usage : \\[mandel/julia] \\[real] \\[?imag]\nUsage : no args[/green]\n"
+                    "[green]Usage : \\[frac_name] \\[real] \\[?imag]\nUsage : no args[/green]\n"
                     "If no argument is given, print out the current exponent values. "
-                    "Else, set the mandel/julia exponent value to \\[real] + \\[imag]j.\n"
+                    "Else, set the exponent value to \\[real] + \\[imag]j.\n"
                     "Providing the imaginary part is only required if the exponent type is \\[mpc].")),
             "threads": CommandIncrement(
                 funct=self.command_threads,
