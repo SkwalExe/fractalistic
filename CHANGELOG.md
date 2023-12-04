@@ -2,6 +2,8 @@
 
 ### Added
 - Inverse mandelbrot set
+- `fractal` command
+- `color` command
 
 # 2.0.0 - 2023-11-27
 
