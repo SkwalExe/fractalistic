@@ -1,3 +1,8 @@
+# 2.1.0 - Unreleased
+
+### Added
+- Inverse mandelbrot set
+
 # 2.0.0 - 2023-11-27
 
 ### Added
