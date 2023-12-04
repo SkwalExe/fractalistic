@@ -12,11 +12,17 @@ SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_fractal_index_from_name(name: str):
-    return {frac.__name__: i for i, frac in enumerate(fractal_list)}[name]
+    try:
+        return {frac.__name__.lower(): i for i, frac in enumerate(fractal_list)}[name.lower()]
+    except KeyError:
+        return None
 
 
 def get_color_index_from_name(name: str):
-    return {color.__name__: i for i, color in enumerate(color_renderers)}[name]
+    try:
+        return {color.__name__.lower(): i for i, color in enumerate(color_renderers)}[name.lower()]
+    except KeyError:
+        return None
 
 
 def pos_to_c(pos: Vec, cell_size, screen_pos_on_plane, screen_size) -> mpc:
