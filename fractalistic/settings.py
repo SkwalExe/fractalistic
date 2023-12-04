@@ -40,6 +40,11 @@ class RenderSettings():
     Un+1 = (Un)^p + C
     """
 
+    burning_ship_exponent: float | int | mpc = int(2)
+    """-> P in the burning ship formula:
+    Un+1 = (|Re(Un)| + i|Im(Un)|)^p + C
+    """
+
     inv_mandel_numerator: mpc = mpc(1, 0)
     """-> b in the inverse mandelbrot formula:
     Un+1 = b/(Un² + C)

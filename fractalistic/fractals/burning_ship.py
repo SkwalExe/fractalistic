@@ -17,7 +17,7 @@ class BurningShip(FractalBase):
         z = mpc(0, 0)
         while abs(z) < 5 and i < settings.max_iter:
             z = mpc(abs(z.real), abs(z.imag))
-            z = z*z - point
+            z = z.__pow__(settings.burning_ship_exponent) - point
             i += 1
 
         if i == settings.max_iter:
