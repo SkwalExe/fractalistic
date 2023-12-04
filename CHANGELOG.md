@@ -6,6 +6,9 @@
 - `color` command
 - Custom burning ship exponent
 
+### Improved
+- Beautiful log messages
+
 ### Fixed
 - Bug with custom exponents
 - Errors in help messages
