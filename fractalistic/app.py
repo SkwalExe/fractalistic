@@ -1009,6 +1009,14 @@ class FractalisticApp(App):
                     f"{self.render_settings.mandelbrot_starting_value:.4f}",
                 ])
                 self.update_canv()
+            case "inv_mb_num":
+                self.render_settings.inv_mandel_numerator = c_num
+                self.log_write([
+                    "[on red] Current Inverse Mandelbrot Set numerator ",
+                    f"{self.render_settings.inv_mandel_numerator:.4f}",
+                ])
+
+                self.update_canv()
 
     def compose(self):
         # Mount the footer and a progress bar

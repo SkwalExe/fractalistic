@@ -40,6 +40,11 @@ class RenderSettings():
     Un+1 = (Un)^p + C
     """
 
+    inv_mandel_numerator: mpc = mpc(1, 0)
+    """-> b in the inverse mandelbrot formula:
+    Un+1 = b/(Un² + C)
+    """
+
     color_renderer_index: int = 0
     """Index of the current color renderer"""
 
