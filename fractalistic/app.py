@@ -9,7 +9,8 @@ from textual import log
 # ---------- Local imports
 from . import fractals, colors, __version__
 from .utils import (
-    SRC_DIR, get_divergence_matrix, set_precision, pos_to_c)
+    SRC_DIR, get_divergence_matrix, set_precision, pos_to_c,
+    get_fractal_index_from_name, get_color_index_from_name)
 from .fractals.fractal_base import FractalBase
 from .vec import Vec
 from .click_modes import CLICK_MODES
@@ -123,19 +124,20 @@ class FractalisticApp(App):
     # ========== other commands
 
     def command_help(self, args, argc: int) -> None:
-        if argc == 0:
-            command_desc = [
-                f"- [blue]{name}[/blue]: {self.command_list[name].help}"
-                for name in self.command_list
-            ]
+        if argc == 1:
+            if args[0] == "+":
+                command_desc = [
+                    f"- [blue]{name}[/blue]: {self.command_list[name].help}"
+                    for name in self.command_list
+                ]
 
-            self.log_write([
-                "[on blue]Available commands",
-                *command_desc,
-                "[green]Use 'help command_name' to get more info about a command"
-            ])
+                self.log_write([
+                    "[on blue]Available commands",
+                    *command_desc,
+                    "[green]Use 'help command_name' to get more info about a command"
+                ])
+                return
 
-        elif argc == 1:
             command = self.get_command(args[0])
             if command is None:
                 return
@@ -145,6 +147,15 @@ class FractalisticApp(App):
                 command.help,
                 command.extra_help
             ])
+            return
+
+        # If no args were passed
+        self.log_write([
+            "[on blue]Available commands",
+            ", ".join([f"[blue]{name}[/blue]" for name in self.command_list]),
+            "[green]Use [bold]'help +'[/bold] to get a list of all commands and a basic description. "
+            "[green]Use [bold]'help command_name'[/bold] to get more info about a command"
+        ])
 
     def command_clear(self, args, argc: int) -> None:
         self.rich_log.clear()
@@ -337,6 +348,47 @@ class FractalisticApp(App):
                 real_parsed)
         self.update_canv()
 
+    def command_fractal(self, args, argc: int) -> None:
+        if argc == 0:
+            self.log_write([
+                f"Current fractal: [blue]{self.selected_fractal.__name__}[/blue]",
+                "Available fractals: "
+                f"{', '.join([f'[violet]{fractal.__name__}[/violet]' for fractal in fractals.fractal_list])}"
+            ])
+            return
+
+        fractal_name = args[0]
+
+        fractal_index = get_fractal_index_from_name(fractal_name)
+
+        if fractal_index is None:
+            self.log_write(f"Cannot find fractal [white on red]{fractal_name}")
+            return
+
+        self.render_settings.fractal_index = fractal_index
+        self.log_write(f"Current fractal set to [blue]{self.selected_fractal.__name__}")
+        self.update_canv()
+
+    def command_color(self, args, argc: int) -> None:
+        if argc == 0:
+            self.log_write([
+                f"Current color: [blue]{self.selected_color.__name__}[/blue]",
+                "Available colors: "
+                f"{', '.join([f'[violet]{color.__name__}[/violet]' for color in colors.color_renderers])}"
+            ])
+            return
+
+        color_name = args[0]
+        color_index = get_color_index_from_name(color_name)
+
+        if color_index is None:
+            self.log_write(f"Cannot find color [white on red]{color_name}")
+            return
+
+        self.render_settings.color_renderer_index = color_index
+        self.log_write(f"Current color set to [blue]{self.selected_color.__name__}")
+        self.update_canv()
+
     # We cant directly set command_list because we couldn't reference command methods correctly
     # Please order the commands alphabetically
     def set_command_list(self) -> None:
@@ -364,9 +416,17 @@ class FractalisticApp(App):
                 help="Set the action to take when left or right clicking on the canvas.",
                 accepted_arg_counts=[0, 2],
                 extra_help=(
-                    "[green]Usage : [left/right] [mode]\nUsage : no args[/green]\n"
+                    "[green]Usage : \\[left/right] \\[mode]\nUsage : no args[/green]\n"
                     "If no argument is given, print out the current click modes and the available modes. "
                     "Else, set the left/right click action to \\[mode].")),
+            "color": Command(
+                funct=self.command_color,
+                help="List all the available color schemes or select the specified one.",
+                accepted_arg_counts=[0, 1],
+                extra_help=(
+                    "[green]Usage : \\[color]\nUsage : no args[/green]\n"
+                    "If no argument is given, print out the current color and all the available colors. "
+                    "Else, select the specified color.")),
             "exp_type": Command(
                 funct=self.command_exp_type,
                 help="Set the data type used for Julia and Mandelbrot exponents.",
@@ -379,6 +439,14 @@ class FractalisticApp(App):
                     "- \\[mpc] is the complex type from the gmpy2 library.\n"
                     "- If you change the type, the exponent value will be reset to 2.\n"
                     "- [red]Be aware that using float or mpc types will make renders much slower.")),
+            "fractal": Command(
+                funct=self.command_fractal,
+                help="List all the available fractals or select the specified one.",
+                accepted_arg_counts=[0, 1],
+                extra_help=(
+                    "[green]Usage : \\[fract name]\nUsage : no args[/green]\n"
+                    "If no argument is given, print out the available fractals. "
+                    "Else, select the specified one. The fractal name is case insensitive.")),
             "help": Command(
                 funct=self.command_help,
                 help="Show the help message",
