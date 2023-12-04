@@ -62,7 +62,6 @@ fractalistic
 
 Possible features to add later:
 - [ ] Splash screen
-- [ ] app.log_error(), etc utility functions
 - [ ] New mandelbrot variants
 
 Commands:

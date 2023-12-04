@@ -96,30 +96,30 @@ class FractalisticApp(App):
     def command_max_iter(self, value: int) -> None:
         self.render_settings.max_iter = value
 
-        self.log_write(f"max_iter set to [blue]{self.render_settings.max_iter}")
+        self.log_success(f"max_iter set to [blue]{self.render_settings.max_iter}")
         self.update_canv()
 
     def command_move_dist(self, value: int) -> None:
         self.settings.move_distance = value
-        self.log_write(f"Move distance set to [blue]{self.settings.move_distance}")
+        self.log_success(f"Move distance set to [blue]{self.settings.move_distance}")
 
     def command_precision(self, value: int) -> None:
         self.precision = value
 
-        self.log_write(f"Numeric precision set to [blue]{value}")
+        self.log_success(f"Numeric precision set to [blue]{value}")
         self.update_canv()
 
     def command_screenshot_threads(self, value: int) -> None:
         self.settings.screenshot_threads = value
-        self.log_write(f"Screenshot thread count set to [blue]{self.settings.screenshot_threads}")
+        self.log_success(f"Screenshot thread count set to [blue]{self.settings.screenshot_threads}")
 
     def command_threads(self, value: int) -> None:
         self.settings.threads = value
-        self.log_write(f"Rendering thread count set to [blue]{self.settings.threads}")
+        self.log_success(f"Rendering thread count set to [blue]{self.settings.threads}")
 
     def command_zoom_lvl(self, value: int) -> None:
         self.settings.zoom_intensity = value
-        self.log_write(f"Zoom level set to [blue]{self.settings.zoom_intensity}%")
+        self.log_success(f"Zoom level set to [blue]{self.settings.zoom_intensity}%")
 
     # ========== other commands
     def command_capture(self, args, argc: int) -> None:
@@ -130,11 +130,11 @@ class FractalisticApp(App):
                 width = int(args[0])
                 height = int(args[1])
             except ValueError:
-                self.log_write("Width and height must be integers")
+                self.log_error("Width and height must be integers")
                 return
 
             if width <= 0 or height <= 0:
-                self.log_write("Width and height must be positive")
+                self.log_error("Width and height must be positive")
                 return
 
             self.action_screenshot(Vec(width, height))
@@ -146,11 +146,11 @@ class FractalisticApp(App):
             try:
                 quality = int(args[0])
             except ValueError:
-                self.log_write("Quality must be an integer")
+                self.log_error("Quality must be an integer")
                 return
 
             if quality <= 0:
-                self.log_write("Quality must be positive")
+                self.log_error("Quality must be positive")
                 return
 
             self.action_screenshot(self.get_screenshot_size_fit(quality))
@@ -173,11 +173,11 @@ class FractalisticApp(App):
 
         # If two args were provided
         if args[0] not in ["left", "right"]:
-            self.log_write("[red]First argument must be 'left' or 'right'")
+            self.log_error("[red]First argument must be 'left' or 'right'")
             return
 
         if args[1] not in CLICK_MODES:
-            self.log_write(f"[red]Second argument must be one of: {', '.join([mode for mode in CLICK_MODES])}")
+            self.log_error(f"[red]Second argument must be one of: {', '.join([mode for mode in CLICK_MODES])}")
             return
 
         if args[0] == "left":
@@ -185,7 +185,7 @@ class FractalisticApp(App):
         else:
             self.settings.right_click_mode_name = args[1]
 
-        self.log_write(f"{args[0].capitalize()} click mode set to [blue]{args[1]}")
+        self.log_success(f"{args[0].capitalize()} click mode set to [blue]{args[1]}")
 
     def command_color(self, args, argc: int) -> None:
         if argc == 0:
@@ -200,11 +200,11 @@ class FractalisticApp(App):
         color_index = get_color_index_from_name(color_name)
 
         if color_index is None:
-            self.log_write(f"Cannot find color [white on red]{color_name}")
+            self.log_error(f"Cannot find color [white on red]{color_name}")
             return
 
         self.render_settings.color_renderer_index = color_index
-        self.log_write(f"Current color set to [blue]{self.selected_color.__name__}")
+        self.log_success(f"Current color set to [blue]{self.selected_color.__name__}")
         self.update_canv()
 
     def command_exp_type(self, args, argc: int) -> None:
@@ -220,11 +220,11 @@ class FractalisticApp(App):
         wanted_type = args[1]
 
         if fract not in ["julia", "mandel", "burning_ship"]:
-            self.log_write("[red]First argument must be 'julia', 'mandel' or 'burning_ship'")
+            self.log_error("[red]First argument must be 'julia', 'mandel' or 'burning_ship'")
             return
 
         if wanted_type not in ["int", "float", "mpc"]:
-            self.log_write("[red]Second argument must be 'int', 'float' or 'mpc'")
+            self.log_error("[red]Second argument must be 'int', 'float' or 'mpc'")
             return
 
         new_value = eval(args[1])(int(2))
@@ -237,7 +237,7 @@ class FractalisticApp(App):
             case "burning_ship":
                 self.render_settings.burning_ship_exponent = new_value
 
-        self.log_write(
+        self.log_info(
             f"{fract.capitalize()} exponent type set to [purple]{args[1]}[/purple] and reset to 2.")
 
         self.update_canv()
@@ -256,11 +256,11 @@ class FractalisticApp(App):
         fractal_index = get_fractal_index_from_name(fractal_name)
 
         if fractal_index is None:
-            self.log_write(f"Cannot find fractal [white on red]{fractal_name}")
+            self.log_error(f"Cannot find fractal [white on red]{fractal_name}")
             return
 
         self.render_settings.fractal_index = fractal_index
-        self.log_write(f"Current fractal set to [blue]{self.selected_fractal.__name__}")
+        self.log_success(f"Current fractal set to [blue]{self.selected_fractal.__name__}")
         self.update_canv()
 
     def command_help(self, args, argc: int) -> None:
@@ -304,7 +304,7 @@ class FractalisticApp(App):
     def command_pos(self, args, argc: int) -> None:
         # If no args are provided, just show the current position
         if argc == 0:
-            self.log_write(f"Current position: [blue]{self.render_settings.screen_pos_on_plane}")
+            self.log_info(f"Current position: [blue]{self.render_settings.screen_pos_on_plane}")
             return
 
         # If args are provided, go to the given x and y position
@@ -314,7 +314,7 @@ class FractalisticApp(App):
             real = mpfr(args[0])
             imag = mpfr(args[1])
         except ValueError:
-            self.log_write("Real and imaginary parts must be valid integers or floats")
+            self.log_error("Real and imaginary parts must be valid integers or floats")
             return
 
         self.render_settings.screen_pos_on_plane = mpc(real, imag)
@@ -323,7 +323,7 @@ class FractalisticApp(App):
         self.update_canv()
 
     def command_quit(self, args, argc: int) -> None:
-        self.log_write("Quitting...")
+        self.log_info("Quitting...")
         self.exit()
 
     def command_save_state(self, args, argc: int) -> None:
@@ -338,10 +338,10 @@ class FractalisticApp(App):
                 state_info.render_settings = self.render_settings
                 pickle.dump(state_info, f)
         except OSError as e:
-            self.log_write(f"Cannot write to file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
+            self.log_error(f"Cannot write to file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
             return
 
-        self.log_write(f"State saved to [blue]{filename}")
+        self.log_success(f"State saved to [blue]{filename}")
 
     def command_set_exp(self, args, argc: int) -> None:
         if argc == 0:
@@ -360,7 +360,7 @@ class FractalisticApp(App):
         imag = None if argc == 2 else args[2]
 
         if fract not in ["julia", "mandel", "burning_ship"]:
-            self.log_write("[red]First argument must be 'julia', 'mandel' or 'burning_ship")
+            self.log_error("[red]First argument must be 'julia', 'mandel' or 'burning_ship")
             return
 
         match fract:
@@ -374,7 +374,7 @@ class FractalisticApp(App):
         try:
             real_parsed = mpfr(real)
         except ValueError:
-            self.log_write(f"Real part must be a valid {exp_type.__name__}")
+            self.log_error(f"Real part must be a valid {exp_type.__name__}")
             return
 
         # If an imag part was provided
@@ -395,7 +395,7 @@ class FractalisticApp(App):
                     self.render_settings.burning_ship_exponent = mpc(real_parsed, imag_parsed)
         else:
             if imag is not None:
-                self.log_write("Imaginary part ignored because the exponent type is not mpc")
+                self.log_warning("Imaginary part ignored because the exponent type is not mpc")
             match fract:
                 case "julia":
                     self.render_settings.julia_exponent = exp_type(real_parsed)
@@ -406,7 +406,7 @@ class FractalisticApp(App):
         self.update_canv()
 
     def command_version(self, args, argc: int) -> None:
-        self.log_write(f"Fractalistic version: [on blue]{__version__}")
+        self.log_info(f"Fractalistic version: [on blue]{__version__}")
 
     # We cant directly set command_list because we couldn't reference command methods correctly
     # Please order the commands alphabetically
@@ -543,7 +543,7 @@ class FractalisticApp(App):
     # ---------- ACTIONS
     def action_cancel_screenshot(self) -> None:
         self.cancel_screenshot = True
-        self.log_write("Screenshot cancelled")
+        self.log_info("Screenshot cancelled")
 
     def action_go(self, x, y) -> None:
         if not self.ready:
@@ -581,7 +581,7 @@ class FractalisticApp(App):
             (self.render_settings.color_renderer_index + 1) % len(colors.color_renderers))
 
         self.update_canv()
-        self.log_write(f"Now using the [purple]{self.selected_color.__name__}[/purple] color scheme")
+        self.log_info(f"Now using the [purple]{self.selected_color.__name__}[/purple] color scheme")
 
     def action_next_fractal(self) -> None:
         if not self.ready:
@@ -593,11 +593,9 @@ class FractalisticApp(App):
         self.render_settings.fractal_index = (self.render_settings.fractal_index + 1) % len(fractals.fractal_list)
         self.update_canv()
 
-        to_write = [f"Now viewing the [purple]{self.selected_fractal.__name__}[/purple] fractal."]
+        self.log_info(f"Now viewing the [purple]{self.selected_fractal.__name__}[/purple] fractal.")
         if self.selected_fractal.message is not None:
-            to_write.append(self.selected_fractal.message)
-
-        self.log_write(to_write)
+            self.log_info(self.selected_fractal.message)
 
     def action_screenshot(self, screenshot_size: Vec | None = None) -> None:
         if not self.ready:
@@ -655,7 +653,7 @@ class FractalisticApp(App):
             save_to = f"{self.selected_fractal.__name__}_screenshot_{int(time())}.png"
             image.save(save_to)
             self.call_after_refresh(
-                self.log_write,
+                self.log_success,
                 f"Screenshot [{screenshot_width}x{screenshot_height}] saved to [on violet]{save_to}")
 
             # Wait one second to allow the user to see that the operation is finished successfully
@@ -716,6 +714,26 @@ class FractalisticApp(App):
     CSS_PATH = os.path.join(SRC_DIR, "app.tcss")
 
     # ---------- UTILS
+
+    def log_error(self, message: str, subject: str | None = None) -> None:
+        self.log_write([
+            f"[on red] Error{f': {subject}' if subject is not None else ''} ",
+            f"[red]{message}"])
+
+    def log_info(self, message: str, subject: str | None = None) -> None:
+        self.log_write([
+            f"[on blue] Info{f': {subject}' if subject is not None else ''} ",
+            f"[blue]{message}"])
+
+    def log_success(self, message: str, subject: str | None = None) -> None:
+        self.log_write([
+            f"[black on green] Success{f': {subject}' if subject is not None else ''} ",
+            f"[green]{message}"])
+
+    def log_warning(self, message: str, subject: str | None = None) -> None:
+        self.log_write([
+            f"[black on yellow] Warning{f': {subject}' if subject is not None else ''} ",
+            f"[yellow]{message}"])
 
     def set_marker(self, pos):
         if self.settings.marker_pos is not None:
@@ -796,17 +814,17 @@ class FractalisticApp(App):
                     state_file: StateInfo = pickle.load(f)
                     self.settings.render_settings = state_file.render_settings
                 except Exception as e:
-                    self.log_write(
-                        f"[red]Cannot decode file '{filename}'. "
+                    self.log_error(
+                        f"Cannot decode file '{filename}'. "
                         "After version 2.0.0, the state file format changed.[/red]"
                         f"\nError: {e}")
                     return
 
         except OSError as e:
-            self.log_write(f"Cannot read file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
+            self.log_error(f"Cannot read file '{filename}'. [red]Errno {e.errno}: {e.strerror}.")
             return
 
-        self.log_write(f"State loaded from [blue]{filename}[/blue]")
+        self.log_success(f"State loaded from [blue]{filename}[/blue]")
 
     def reset_position(self) -> None:
         # remove the marker
@@ -830,7 +848,7 @@ class FractalisticApp(App):
 
     def get_command(self, name: str) -> Command | None:
         if name not in self.command_list:
-            self.log_write(f"[red]Cannot find command: [white on red]{name}")
+            self.log_error(f"[red]Cannot find command: [white on red]{name}")
             return None
 
         return self.command_list[name]
@@ -867,9 +885,9 @@ class FractalisticApp(App):
             return
 
         if not len(args) in command.accepted_arg_count:
-            self.log_write(
-                f"[red]Command [white on red]{command_name}[/white on red] expects "
-                f"{', or '.join([str(x) for x in command.accepted_arg_count])} arguments, got {len(args)}")
+            self.log_error(
+                f"Command [white on red]{command_name}[/white on red] expects "
+                f"{', or '.join([str(x) for x in command.accepted_arg_count])} arguments, but got {len(args)}")
 
             return
 
@@ -883,7 +901,7 @@ class FractalisticApp(App):
             if value.success:
                 command.funct(value.new_value)
             else:
-                self.log_write(value.error_message)
+                self.log_error(value.error_message)
                 return
         else:
             command.funct(args, len(args))
@@ -1075,8 +1093,8 @@ class FractalisticApp(App):
                 # Hide the marker since the fractal has changed
                 self.remove_marker()
                 self.render_settings.julia_click = c_num
-                self.log_write([
-                    "[on red] Current Julia Set ",
+                self.log_info([
+                    "Current Julia Set:\n"
                     f"{self.render_settings.julia_click:.4f}",
                 ])
                 self.update_canv()
@@ -1091,15 +1109,14 @@ class FractalisticApp(App):
                 self.update_canv()
             case "mb_start":
                 self.render_settings.mandelbrot_starting_value = c_num
-                self.log_write([
-                    "[on red] Current Mandelbrot Set starting value ",
-                    f"{self.render_settings.mandelbrot_starting_value:.4f}",
-                ])
+                self.log_info(
+                    "Current Mandelbrot Set starting value:\n"
+                    f"{self.render_settings.mandelbrot_starting_value:.4f}")
                 self.update_canv()
             case "inv_mb_num":
                 self.render_settings.inv_mandel_numerator = c_num
-                self.log_write([
-                    "[on red] Current Inverse Mandelbrot Set numerator ",
+                self.log_info([
+                    "Current Inverse Mandelbrot Set numerator:\n"
                     f"{self.render_settings.inv_mandel_numerator:.4f}",
                 ])
 
