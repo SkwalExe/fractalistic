@@ -15,7 +15,7 @@ dependencies = [
     "textual==0.38.1",
     "click_extra==4.7.1",
     "gmpy2==2.1.5",
-    "pillow==10.0.1",
+    "pillow==10.2.0",
     "asyncio==3.4.3",
     "textual_canvas==0.2.0"
 ]
