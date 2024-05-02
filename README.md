@@ -36,6 +36,17 @@ Now start the program with:
 fractalistic
 ```
 
+> [!CAUTION]
+> If the command is not found after installtion, you must add  `~/.local/bin` to your path. You can do this by adding `export PATH=$PATH:~/.local/bin` to your `.bashrc` or `.zshrc` file.
+
+```bash
+# For bash
+echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
+
+# For zsh
+echo 'export PATH=$PATH:~/.local/bin' >> ~/.zshrc
+```
+
 # Features 🌟
 
 **Available fractals**:
