@@ -43,13 +43,12 @@ class CommandIncrement(Command):
         self.app_attribute = app_attribute
 
     def parse_args(self, current_attrib_value, args) -> CommandIncrementArgParseResult:
-        """Returns the new value if the args are valid, else None"""
+        """Returns the new attribute value if the args are valid, else None"""
         result = CommandIncrementArgParseResult()
-        if len(args) == 0:
-            result.error_message = f"The value is currently set to [blue]{current_attrib_value}"
-            return result
 
-        elif len(args) == 1:
+        # len(args) == 0 is handled by app.py:parse_command
+
+        if len(args) == 1:
             try:
                 result.new_value = int(args[0])
             except ValueError:
