@@ -451,7 +451,7 @@ class FractalisticApp(App):
                 help="Set the data type used for Julia and Mandelbrot exponents.",
                 accepted_arg_counts=[0, 2],
                 extra_help=(
-                    "[green]Usage : \\[mandel/julia] \\[int/float/mpc]\nUsage : no args[/green]\n"
+                    "[green]Usage : \\[mandel/julia/burning_ship] \\[int/float/mpc]\nUsage : no args[/green]\n"
                     "If no argument is given, print out the current types. "
                     "Else, set the mandel/julia exponent type to \\[type].\n"
                     "- It is important to use the simplest type possible because it has a huge impact on performance.\n"
@@ -697,9 +697,11 @@ class FractalisticApp(App):
 
     @on(Input.Submitted, "Input")
     def command_input_on_submitted(self, event: Input.Submitted) -> None:
+        # Get the command from the input and clear it
         command = event.value.strip()
         self.command_input.value = ""
 
+        # Ignore empty commands
         if len(command) == 0:
             return
 
@@ -846,7 +848,7 @@ class FractalisticApp(App):
         set_precision(value)
         self.render_settings.wanted_numeric_precision = value
 
-    def get_command(self, name: str) -> Command | None:
+    def get_command(self, name: str) -> Command | CommandIncrement | None:
         if name not in self.command_list:
             self.log_error(f"[red]Cannot find command: [white on red]{name}")
             return None
@@ -876,14 +878,23 @@ class FractalisticApp(App):
         self.settings.marker_pos = None
 
     def parse_command(self, text: str) -> None:
+        """All executed commands are sent directly here."""
+
+        # Extract non-empty arguments, including the command name
         args = list(filter(lambda x: len(x) > 0, text.split(" ")))
 
         command_name = args.pop(0)
+
+        # Returns none if the command is not found
+        # Else, returns Command() or CommandIncrement()
         command = self.get_command(command_name)
 
+        # Error message in case the command is not found
+        # is handled by get_command
         if command is None:
             return
 
+        # Check if the number of arguments is accepted by the command
         if not len(args) in command.accepted_arg_count:
             self.log_error(
                 f"Command [white on red]{command_name}[/white on red] expects "
@@ -891,16 +902,34 @@ class FractalisticApp(App):
 
             return
 
+        # CommandIncrement() is a special case
+        # Else we just call the command with the arguments.
         if isinstance(command, CommandIncrement):
+
+            # app_attribute example : "settings.render_settings.max_iter"
+            # means that the command will increment (self).settings.render_settings.max_iter
+            ############################################################
+            # "attributes": ["settings", "render_settings", "max_iter"]
+            # we recursively go through the path to get the wanted attribute's value
             attributes = command.app_attribute.split(".")
             current_attribute_value = self
             for attribute in attributes:
                 current_attribute_value = current_attribute_value.__getattribute__(attribute)
 
+            # If no args are provided, just print the current value here
+            if len(args) == 0:
+                self.log_info(f"The value is currently set to [blue]{current_attribute_value}")
+                return
+
+            # We pass the args and the current attribute value to CommandIncrement().parse_args()
             value: CommandIncrementArgParseResult = command.parse_args(current_attribute_value, args)
             if value.success:
+                # If the new value was successfully parsed, we call the command's funct
+                # which role is to set the new value, notice the user,
+                # and update the canvas according to the new value, if needed.
                 command.funct(value.new_value)
             else:
+                # If the new value was not successfully parsed, we log the error message
                 self.log_error(value.error_message)
                 return
         else:
@@ -1093,10 +1122,9 @@ class FractalisticApp(App):
                 # Hide the marker since the fractal has changed
                 self.remove_marker()
                 self.render_settings.julia_click = c_num
-                self.log_info([
+                self.log_info(
                     "Current Julia Set:\n"
-                    f"{self.render_settings.julia_click:.4f}",
-                ])
+                    f"{self.render_settings.julia_click:.4f}")
                 self.update_canv()
             case "move":
                 self.render_settings.screen_pos_on_plane = c_num
@@ -1115,10 +1143,9 @@ class FractalisticApp(App):
                 self.update_canv()
             case "inv_mb_num":
                 self.render_settings.inv_mandel_numerator = c_num
-                self.log_info([
+                self.log_info(
                     "Current Inverse Mandelbrot Set numerator:\n"
-                    f"{self.render_settings.inv_mandel_numerator:.4f}",
-                ])
+                    f"{self.render_settings.inv_mandel_numerator:.4f}")
 
                 self.update_canv()
 
