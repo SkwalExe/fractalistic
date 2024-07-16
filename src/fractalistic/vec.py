@@ -1,7 +1,7 @@
 from typing import Any
 
 
-class Vec():
+class Vec:
     x: Any
     y: Any
 

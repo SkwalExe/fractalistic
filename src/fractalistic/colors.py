@@ -1,5 +1,6 @@
-from textual.color import Color
 from typing import Callable
+
+from textual.color import Color
 
 
 def get_intensity(i: int):

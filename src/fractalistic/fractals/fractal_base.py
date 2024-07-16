@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+
 from gmpy2 import mpc
+
 from ..settings import RenderSettings
 
 
