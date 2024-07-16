@@ -1,4 +1,4 @@
-class LineDivergenceResult():
+class LineDivergenceResult:
     y: int
     values: list[int]
 

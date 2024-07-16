@@ -1,4 +1,5 @@
 from gmpy2 import mpc
+
 from ..settings import RenderSettings
 from .fractal_base import FractalBase
 
@@ -8,6 +9,7 @@ class Mandelbrot(FractalBase):
     With U0 = 0 and c being the point in the complex plane,
     Un+1 = Un² + c
     """
+
     message = None
 
     @staticmethod

@@ -1,5 +1,4 @@
-
-class ClickMode():
+class ClickMode:
     description: str
 
     def __init__(self, description: str):
@@ -14,5 +13,5 @@ CLICK_MODES = {
     "zoom_out": ClickMode("Zoom out from the clicked point"),
     "move": ClickMode("Move the canvas to the clicked point"),
     "info": ClickMode("Show information about the clicked point"),
-    "none": ClickMode("Do nothing")
+    "none": ClickMode("Do nothing"),
 }

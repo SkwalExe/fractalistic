@@ -1,10 +1,11 @@
-from gmpy2 import mpfr, mpc
-from .vec import Vec
-from .click_modes import ClickMode, CLICK_MODES
+from gmpy2 import mpc, mpfr
+
 from . import __version__
+from .click_modes import CLICK_MODES, ClickMode
+from .vec import Vec
 
 
-class RenderSettings():
+class RenderSettings:
     """A class to store all settings for renders."""
 
     cell_size: mpfr | None = None
@@ -59,7 +60,7 @@ class RenderSettings():
     max_iter: int = 128
 
 
-class Settings():
+class Settings:
     render_settings: RenderSettings = RenderSettings()
 
     canv_size: Vec | None = None
@@ -107,6 +108,6 @@ class Settings():
     fit_screenshots: bool = False
 
 
-class StateInfo():
+class StateInfo:
     version = __version__
     render_settings: RenderSettings

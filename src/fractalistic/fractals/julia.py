@@ -1,6 +1,7 @@
+from gmpy2 import mpc
+
 from ..settings import RenderSettings
 from .fractal_base import FractalBase
-from gmpy2 import mpc
 
 
 class Julia(FractalBase):
@@ -8,6 +9,7 @@ class Julia(FractalBase):
     With U0 being the point in the complex plane,
     Un+1 = Un² - C
     """
+
     message = "Click a point in the complex plane to generate the corresponding Julia set."
 
     @staticmethod

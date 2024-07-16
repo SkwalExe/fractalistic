@@ -1,86 +1,93 @@
 #!/usr/bin/env python3
 # ---------- Click Extra
-from click_extra import extra_command, option
-from click_extra import IntRange, Choice, STRING
+from click_extra import STRING, Choice, IntRange, extra_command, option
+
+from . import __version__
+from .app import FractalisticApp
+from .colors import color_renderers
+from .fractals import fractal_list
+from .settings import Settings
+
 # ---------- Local imports
 from .utils import get_color_index_from_name, get_fractal_index_from_name
-from .app import FractalisticApp
-from . import __version__
-from .colors import color_renderers
 from .vec import Vec
-from .settings import Settings
-from .fractals import fractal_list
+
 # ----------
 
 
 @extra_command(params=[])
+@option("-t", "--threads", help="Number of threads to use for rendering", type=IntRange(1), default=Settings.threads)
 @option(
-    "-t", "--threads",
-    help="Number of threads to use for rendering",
-    type=IntRange(1),
-    default=Settings.threads)
-@option(
-    "-st", "--screenshot-threads",
+    "-st",
+    "--screenshot-threads",
     help="Number of threads to use for rendering HQ screenshots",
     type=IntRange(1),
-    default=Settings.screenshot_threads)
+    default=Settings.screenshot_threads,
+)
+@option("-ls", "--load-state", help="Load state from a file", type=STRING)
 @option(
-    "-ls", "--load-state",
-    help="Load state from a file",
-    type=STRING)
-@option(
-    "-df", "--default-fractal",
+    "-df",
+    "--default-fractal",
     help="Default fractal to show when starting the program.",
     type=Choice([frac.__name__ for frac in fractal_list], False),
-    default="Mandelbrot")
+    default="Mandelbrot",
+)
 @option(
-    "-dc", "--default-color",
+    "-dc",
+    "--default-color",
     help="Default color to use when starting the program.",
     type=Choice([color.__name__ for color in color_renderers], False),
-    default="blue_brown")
+    default="blue_brown",
+)
 @option(
-    "-p", "--decimal-precision",
+    "-p",
+    "--decimal-precision",
     help="Fine-tune numeric precision by specifying the desired bit length for numeric values",
     type=IntRange(5),
-    default=Settings.render_settings.wanted_numeric_precision)
+    default=Settings.render_settings.wanted_numeric_precision,
+)
 @option(
-    "-i", "--max-iter",
+    "-i",
+    "--max-iter",
     help="This option defines the number of iterations required to classify a point as convergent",
     type=IntRange(5),
-    default=Settings.render_settings.max_iter)
+    default=Settings.render_settings.max_iter,
+)
 @option(
-    "-s", "--size",
+    "-s",
+    "--size",
     nargs=2,
     help="Manually set the screenshots width and height. Wont work if you use -f.",
     type=IntRange(32),
-    default=(Settings.screenshot_size.x, Settings.screenshot_size.y))
+    default=(Settings.screenshot_size.x, Settings.screenshot_size.y),
+)
+@option("-f", "--fit", help="Fit screenshots with the canvas.", is_flag=True)
 @option(
-    "-f", "--fit",
-    help="Fit screenshots with the canvas.",
-    is_flag=True)
-@option(
-    "-q", "--quality",
+    "-q",
+    "--quality",
     help=(
         "Only when using --fit, set the quality of screenshots by "
-        "multiplying the original size in the terminal by the specified scaling factor."),
+        "multiplying the original size in the terminal by the specified scaling factor."
+    ),
     type=IntRange(1),
-    default=Settings.screenshot_quality)
-@option(
-    "-v", "--version",
-    help="Show version number and exit",
-    is_flag=True)
-@option(
-    "--debug",
-    help="Enable debug mode for developers.",
-    is_flag=True)
+    default=Settings.screenshot_quality,
+)
+@option("-v", "--version", help="Show version number and exit", is_flag=True)
+@option("--debug", help="Enable debug mode for developers.", is_flag=True)
 def main(
-        fit: bool, quality: float, size: tuple[int, int],
-        default_fractal: str, default_color: str,
-        debug: bool, decimal_precision: int,
-        max_iter: int, version: bool,
-        load_state: str, threads: int,
-        screenshot_threads: int):
-
+    fit: bool,
+    quality: float,
+    size: tuple[int, int],
+    default_fractal: str,
+    default_color: str,
+    debug: bool,
+    decimal_precision: int,
+    max_iter: int,
+    version: bool,
+    load_state: str,
+    threads: int,
+    screenshot_threads: int,
+):
     # If -v or --version is used, show version and exit
     if version:
         print(__version__)

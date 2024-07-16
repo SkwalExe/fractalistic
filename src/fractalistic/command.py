@@ -1,4 +1,4 @@
-class Command():
+class Command:
     # No type definition for funct because of weird behaviour
     # of linter due to assignment to a Callable
 
@@ -13,7 +13,7 @@ class Command():
         self.extra_help = extra_help
 
 
-class CommandIncrementArgParseResult():
+class CommandIncrementArgParseResult:
     success: bool = False
     error_message: str | None = None
     new_value: int | float | None = None
@@ -36,7 +36,7 @@ class CommandIncrement(Command):
                 "- If no sign is specified but an argument is provided, the value is set to the one specified.\n"
                 "- If a sign is specified, the value is incremented or decremented by the second argument."
             ),
-            accepted_arg_counts=[0, 1, 2]
+            accepted_arg_counts=[0, 1, 2],
         )
         self.max_value = max_value
         self.min_value = min_value

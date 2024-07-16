@@ -1,6 +1,6 @@
-from textual_canvas import Canvas
 from textual.binding import Binding
 from textual.events import MouseEvent
+from textual_canvas import Canvas
 
 
 class FractalCanv(Canvas):

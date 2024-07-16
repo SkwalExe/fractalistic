@@ -1,6 +1,7 @@
-from .fractal_base import FractalBase
 from gmpy2 import mpc
+
 from ..settings import RenderSettings
+from .fractal_base import FractalBase
 
 
 class BurningShip(FractalBase):
