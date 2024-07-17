@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from gmpy2 import mpc
+from gmpy2 import mpc  # type: ignore
 
 from ..settings import RenderSettings
 

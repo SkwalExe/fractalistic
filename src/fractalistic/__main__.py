@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ---------- Click Extra
 from click_extra import STRING, Choice, IntRange, extra_command, option
 
 from . import __version__
@@ -7,12 +6,8 @@ from .app import FractalisticApp
 from .colors import color_renderers
 from .fractals import fractal_list
 from .settings import Settings
-
-# ---------- Local imports
 from .utils import get_color_index_from_name, get_fractal_index_from_name
 from .vec import Vec
-
-# ----------
 
 
 @extra_command(params=[])
@@ -76,7 +71,7 @@ from .vec import Vec
 @option("--debug", help="Enable debug mode for developers.", is_flag=True)
 def main(
     fit: bool,
-    quality: float,
+    quality: int,
     size: tuple[int, int],
     default_fractal: str,
     default_color: str,
@@ -87,7 +82,7 @@ def main(
     load_state: str,
     threads: int,
     screenshot_threads: int,
-):
+) -> None:
     # If -v or --version is used, show version and exit
     if version:
         print(__version__)
@@ -96,23 +91,23 @@ def main(
     app = FractalisticApp()
 
     # Set default fractal
-    app.settings.render_settings.fractal_index = get_fractal_index_from_name(default_fractal)
+    frac_i = get_fractal_index_from_name(default_fractal)
+    if frac_i is not None:
+        app.settings.render_settings.fractal_index = frac_i
 
     # Set default color
-    app.settings.render_settings.color_renderer_index = get_color_index_from_name(default_color)
+    color_i = get_color_index_from_name(default_color)
+    if color_i is not None:
+        app.settings.render_settings.color_renderer_index = color_i
 
     app.settings.fit_screenshots = fit
     app.settings.debug = debug
     app.settings.screenshot_quality = quality
     app.settings.screenshot_size = Vec(size[0], size[1])
-    app.settings.max_iter = max_iter
+    app.settings.render_settings.max_iter = max_iter
     app.settings.render_settings.wanted_numeric_precision = decimal_precision
     app.settings.state_file = load_state
     app.settings.threads = threads
     app.settings.screenshot_threads = screenshot_threads
 
     app.run()
-
-
-if __name__ == "__main__":
-    main()

@@ -17,8 +17,8 @@ class FractalCanv(Canvas):
         Binding("r", "reset", "Rst pos/zoom"),
         Binding("c", "next_color", "Nxt Color Scheme"),
         Binding("f", "next_fractal", "Nxt Fractal"),
-        Binding("p", "screenshot", "HD Screenshot"),
+        Binding("p", "capture", "HD Screenshot"),
     ]
 
-    def on_click(self, event):
+    def on_click(self, event: MouseEvent) -> None:
         self.post_message(self.CanvClick.from_event(event))

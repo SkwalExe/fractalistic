@@ -1,4 +1,4 @@
-from gmpy2 import mpc, mpfr
+from gmpy2 import mpc, mpfr  # type: ignore
 
 from . import __version__
 from .click_modes import CLICK_MODES, ClickMode
@@ -8,7 +8,7 @@ from .vec import Vec
 class RenderSettings:
     """A class to store all settings for renders."""
 
-    cell_size: mpfr | None = None
+    cell_size: mpfr
     """The height and width of one pixel in the complex plane"""
 
     screen_pos_on_plane: mpc = mpc(0, 0)
@@ -63,10 +63,10 @@ class RenderSettings:
 class Settings:
     render_settings: RenderSettings = RenderSettings()
 
-    canv_size: Vec | None = None
+    canv_size: Vec[int]
     """The number of rows and cols of the canvas"""
 
-    marker_pos: Vec | None = None
+    marker_pos: Vec[int] | None = None
     """Position of the red marker on the screen"""
 
     move_distance: int = 10
@@ -101,7 +101,7 @@ class Settings:
     debug: bool = False
     """Enable debug mode for developers."""
 
-    screenshot_size: Vec = Vec(1920, 1080)
+    screenshot_size: Vec[int] = Vec(1920, 1080)
 
     screenshot_quality: int = 20
 

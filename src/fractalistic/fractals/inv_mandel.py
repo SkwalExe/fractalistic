@@ -1,4 +1,4 @@
-from gmpy2 import mpc
+from gmpy2 import mpc  # type: ignore
 
 from ..settings import RenderSettings
 from .fractal_base import FractalBase

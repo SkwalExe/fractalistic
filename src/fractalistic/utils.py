@@ -2,7 +2,7 @@ import os
 from multiprocessing import Queue
 
 import gmpy2
-from gmpy2 import mpc
+from gmpy2 import mpc, mpfr  # type: ignore
 
 from .colors import color_renderers
 from .fractals import fractal_list
@@ -13,21 +13,21 @@ from .vec import Vec
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_fractal_index_from_name(name: str):
+def get_fractal_index_from_name(name: str) -> int | None:
     try:
         return {frac.__name__.lower(): i for i, frac in enumerate(fractal_list)}[name.lower()]
     except KeyError:
         return None
 
 
-def get_color_index_from_name(name: str):
+def get_color_index_from_name(name: str) -> int | None:
     try:
         return {color.__name__.lower(): i for i, color in enumerate(color_renderers)}[name.lower()]
     except KeyError:
         return None
 
 
-def pos_to_c(pos: Vec, cell_size, screen_pos_on_plane, screen_size) -> mpc:
+def pos_to_c(pos: Vec, cell_size: mpfr, screen_pos_on_plane: mpc, screen_size: Vec[int]) -> mpc:
     """Takes a position (x, y) of the canvas and converts it into the corresponding complex number on the plane"""
     result_real = (pos.x - screen_size.x // 2) * cell_size
     result_imag = (pos.y - screen_size.y // 2) * -cell_size
@@ -36,8 +36,8 @@ def pos_to_c(pos: Vec, cell_size, screen_pos_on_plane, screen_size) -> mpc:
     return result
 
 
-def set_precision(value) -> None:
-    gmpy2.get_context().precision = value
+def set_precision(value: int) -> None:
+    gmpy2.get_context().precision = value  # type: ignore
 
 
 def get_divergence_matrix(start: int, stop: int, render_settings: RenderSettings, size: Vec, queue: Queue) -> None:
