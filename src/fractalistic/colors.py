@@ -3,7 +3,7 @@ from typing import Callable
 from textual.color import Color
 
 
-def get_intensity(i: int):
+def get_intensity(i: int) -> int:
     return 16 * i % 255
 
 
@@ -29,47 +29,47 @@ BLUE_BROWN = [
 ]
 
 
-def blue_brown(i: int):
+def blue_brown(i: int) -> Color:
     return BLUE_BROWN[i % len(BLUE_BROWN)]
 
 
-def hsl_wheel(i: int):
+def hsl_wheel(i: int) -> Color:
     return Color.from_hsl((0.0 + i / 80) % 1, 1, 0.4)
 
 
-def blue(i: int):
+def blue(i: int) -> Color:
     return Color(0, 0, get_intensity(i))
 
 
-def green(i: int):
+def green(i: int) -> Color:
     return Color(0, get_intensity(i), 0)
 
 
-def emerald(i: int):
+def emerald(i: int) -> Color:
     intensity = get_intensity(i)
     return Color(0, intensity, intensity)
 
 
-def red(i: int):
+def red(i: int) -> Color:
     return Color(get_intensity(i), 0, 0)
 
 
-def violet(i: int):
+def violet(i: int) -> Color:
     intensity = get_intensity(i)
     return Color(intensity, 0, intensity)
 
 
-def yellow(i: int):
+def yellow(i: int) -> Color:
     intensity = get_intensity(i)
     return Color(intensity, intensity, 0)
 
 
-def gray(i: int):
+def gray(i: int) -> Color:
     intensity = get_intensity(i)
     return Color(intensity, intensity, intensity)
 
 
-def black_and_white(i: int):
+def black_and_white(_: int) -> Color:
     return Color(255, 255, 255)
 
 

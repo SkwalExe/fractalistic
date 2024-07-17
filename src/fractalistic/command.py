@@ -1,3 +1,7 @@
+from collections.abc import Callable, Sequence
+from typing import Optional
+
+
 class Command:
     # No type definition for funct because of weird behaviour
     # of linter due to assignment to a Callable
@@ -6,9 +10,15 @@ class Command:
     accepted_arg_counts: int
     extra_help: str | None
 
-    def __init__(self, funct, help: str, accepted_arg_counts: list[int], extra_help: str | None = None):
+    def __init__(
+        self,
+        funct: Callable,
+        hlp: str,
+        accepted_arg_counts: list[int],
+        extra_help: str | None = None,
+    ) -> None:
         self.funct = funct
-        self.help = help
+        self.help = hlp
         self.accepted_arg_count = accepted_arg_counts
         self.extra_help = extra_help
 
@@ -24,7 +34,14 @@ class CommandIncrement(Command):
     max_value: int | None
     app_attribute: str
 
-    def __init__(self, app_attribute: str, min_value=None, max_value=None, *args, **kwargs):
+    def __init__(
+        self,
+        app_attribute: str,
+        min_value: Optional[int] = None,
+        max_value: Optional[int] = None,
+        *args,  # noqa: ANN002
+        **kwargs,  # noqa: ANN003
+    ) -> None:
         super().__init__(
             *args,
             **kwargs,
@@ -42,12 +59,13 @@ class CommandIncrement(Command):
         self.min_value = min_value
         self.app_attribute = app_attribute
 
-    def parse_args(self, current_attrib_value, args) -> CommandIncrementArgParseResult:
+    def parse_args(self, current_attrib_value: int, args: Sequence[str]) -> CommandIncrementArgParseResult:
         """Returns the new attribute value if the args are valid, else None"""
         result = CommandIncrementArgParseResult()
 
         # len(args) == 0 is handled by app.py:parse_command
 
+        # If there is only one argument, it must be an absolute value to set the parameter to.
         if len(args) == 1:
             try:
                 result.new_value = int(args[0])
@@ -55,6 +73,7 @@ class CommandIncrement(Command):
                 result.error_message = "[red]The value must be an integer"
                 return result
 
+        # If there are two arguments, it must be of the form "+/- increment"
         elif len(args) == 2:
             sign = args[0]
             value = args[1]
@@ -71,6 +90,11 @@ class CommandIncrement(Command):
 
             result.new_value = current_attrib_value + (value if sign == "+" else -value)
 
+        # We must handle this case to make pyright hapy
+        else:
+            raise Exception("Invalid number of command argument provided to CommandIncrement.parse_args()")
+
+        # Check that the new value is inside the configured bounds -------------------------------
         if self.min_value is not None and result.new_value < self.min_value:
             result.error_message = f"[red]The new value must be greater than {self.min_value}"
             return result
@@ -78,6 +102,7 @@ class CommandIncrement(Command):
         if self.max_value is not None and result.new_value > self.max_value:
             result.error_message = f"[red]The new value must not be greater than {self.max_value}"
             return result
+        # ----------------------------------------------------------------------------------------
 
         result.success = True
         return result
