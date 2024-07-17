@@ -43,3 +43,5 @@ lint-check = "ruff check"
 check-types = "pyright"
 dev = "fractalistic"
 
+[tool.pdm.resolution]
+only-binary = "gmpy2"
