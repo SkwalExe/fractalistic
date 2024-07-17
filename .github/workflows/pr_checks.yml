@@ -15,6 +15,8 @@ jobs:
           ref: ${{ github.head_ref }}
           # This is important to fetch the changes to the previous commit
           fetch-depth: 0
+      - name: Install system dependencies
+        run: sudo apt-get install -y libgmp-dev libmpfr-dev libmpc-dev
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
       - name: Install dependencies
