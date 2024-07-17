@@ -935,7 +935,6 @@ class FractalisticApp(App):
             for attribute in attributes:
                 current_attribute_value = current_attribute_value.__getattribute__(attribute)
 
-
             if not isinstance(current_attribute_value, int):
                 raise Exception("current_attribute_value is supposed to be an int")
 
