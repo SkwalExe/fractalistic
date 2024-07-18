@@ -4,14 +4,13 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "fractalistic"
-version = "2.1.0"
 description = "Terminal based fractal explorer, that includes Mandelbrot, Burning Ship, and Julia."
 authors = [{name = "Leopold Koprivnik", email = "skwal@etik.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">=3.9"
-
+dynamic = ["version"]
 
 dependencies = [
     "textual==0.38.1",
@@ -21,6 +20,10 @@ dependencies = [
     "asyncio==3.4.3",
     "textual_canvas==0.2.0",
 ]
+
+[tool.pdm.version]
+source = "file"
+path = "src/fractalistic/__init__.py"
 
 [project.urls]
 Repository = "https://github.com/SkwalExe/fractalistic"
