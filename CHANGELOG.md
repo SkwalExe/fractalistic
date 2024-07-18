@@ -1,3 +1,9 @@
+# 2.2.0 - 2024-07-18
+
+### Improved
+- Refactored entire codebase
+- Fixed a lot of small errors
+
 # 2.1.0 - 2024-05-02
 
 ### Added
