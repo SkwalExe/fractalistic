@@ -6,6 +6,7 @@ export default defineConfig({
     description:
         'The Terminal-Based Fractal Explorer. Fractalistic is your terminal gateway to Mandelbrot, Burning Ship, and Julia.',
     srcDir: 'src',
+    appearance: 'force-dark',
     themeConfig: {
         // https://vitepress.dev/reference/default-theme-config
         nav: [
