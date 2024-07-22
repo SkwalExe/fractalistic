@@ -1,3 +1,7 @@
+cache/
+node_modules/
+dist/
+
 .pdm-python
 .ruff_cache
 
