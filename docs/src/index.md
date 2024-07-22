@@ -31,7 +31,7 @@ features:
   - title: Robust Command System
     details: "Fractalistic offers a robust command system that goes beyond simple fractal navigation. Additional features include capturing high-definition screenshots, adjusting render settings, modifying navigation preferences, changing colors, and much more."
     icon: 📌
-  - title: Modular Rendering Engie
+  - title: Modular Rendering Engine
     details: "Fractalistic's underlying rendering engine is highly modular. The integrated command system enables you to inspect and modify technical parameters, allowing you to explore beyond the basic Mandelbrot and Julia sets. The combination of adjustable parameters makes the number of possible fractals effectively infinite."
     icon: ⚙️
 
