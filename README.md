@@ -13,6 +13,10 @@
 
 <p align="center">💠 Terminal based fractal explorer, including Mandelbrot, Burning Ship, and Julia. 💠</p>
 
+# Documentation ✨
+
+[**✨ --> Please head over to our documentation for more information! <-- ✨**](https://fractalistic.skwal.net)
+
 # Fractalistic
 
 <p align="center">
@@ -23,10 +27,10 @@
 
 You can install fractalistic easily with pip:
 ```bash
-python3 -m pip install fractalistic
+pip install fractalistic
 ```
 
-If you want to install the application securely, in an isolated environment, you can use [pipx](https://pypa.github.io/pipx/):
+If you want to install the application in an isolated environment, you can use [pipx](https://pypa.github.io/pipx/):
 ```bash
 pipx install fractalistic
 ```
@@ -36,128 +40,29 @@ Now start the program with:
 fractalistic
 ```
 
-> [!CAUTION]
-> If the command is not found after installtion, you must add  `~/.local/bin` to your path. You can do this by adding `export PATH=$PATH:~/.local/bin` to your `.bashrc` or `.zshrc` file.
+> [!INFO]
+> If the command is not found after installtion, you must add  `~/.local/bin` to your path. You can do this by adding `export PATH=$PATH:~/.local/bin` to your `.bashrc` or `.zshrc` file and **opening a new shell session**.
 
 ```bash
 # For bash
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
-
+echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc; bash
 # For zsh
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.zshrc
+echo 'export PATH=$PATH:~/.local/bin' >> ~/.zshrc; zsh
 ```
 
 # Features 🌟
-
-**Available fractals**:
-- Mandelbrot set
-- Burning Ship set
-- Every Julia sets
-
----
-
-- 🖥️ Terminal based
-- ✨ Next-gen Terminal UI with texutal
-- 🔍 Zoom in/out
-- 🚶 Move around
-- ⚙️ Change max iterations
-- 🎨 Change color palette
-- 🔢 Custom decimal precision
-- 📸 High definition screenshots
-- 📜 Save and load state
-- 📊 Show average divergence
-- 📌 Click to show coordinates and divergence
-- 🏃 Multithreaded rendering
-
-# Roadmap
-
-Possible features to add later:
-- [ ] Splash screen
-- [ ] New mandelbrot variants
-
-Commands:
-- [ ] Command to show current pos, zoom, etc
-
-# How to migrate your state files to >= 2.0.0
-
-First open your toml state file in a text editor. 
-You can open the screen position in the app by using the `pos` command, and copy/pasting the real and imaginary values.
-Then, select the correct fractal, color palette, precision and max_iter values in the app, 
-and use the `save_state` command to save your updated state file.
-
-# Development 
-
-Please, open an issue if you have any suggestion or if you found a bug. I will try to fix it as soon as possible. If you want to contribute, open an empty pull request and explain what you want to do, wait for me to approve it and then you can start working on it.
-
-### Development environment
-
-**For this project, I recomment using vscode with Flake8 (linting/type-checking).**
-
-You will need to fork this repo and clone it locally. 
-
-```bash
-# Replace SkwalExe with your github username
-git clone https://github.com/SkwalExe/fractalistic
-cd fractalistic
-```
-
-Then, install the project and the dependencies locally 
-
-```bash
-pip install .
-```
-
-### Running the app in textual dev mode
-
-- First, open a textual console in a terminal with this command.
-
-```
-textual console
-```
-
-You will need to have `textual-dev` installed. You can install it with pip.
-
-```
-pip install textual-dev
-```
-
-- You can now open a new terminal, and start `fractalistic` in textual dev mode with :
-
-```bash
-# You must already be cd-ed into the repo directory
-TEXTUAL=devtools,debug python3 -m fractalistic
-```
-
-You will be able to see the app logs, and print to the textual console with the `textual.log` function.
-
-### Creating a pull request
-
-- First, create a new branch with a name that describes your feature/fix.
-
-```bash
-git checkout -b my-new-feature
-```
-
-**You can now start working on your feature/fix.**
-
-- Before commiting, you should run the linter and type-checker to make sure your code is clean.
-
-```bash
-# 'pip install flake8' if you don't have it
-flake8 fractalistic
-```
-
-**If you get any error, you should fix it before commiting.**
-
-- Now, commit your changes and push them to your fork.
-
-```bash
-git add .
-git commit -m "My new feature"
-git push origin my-new-feature
-```
-
-- Finally, open a pull request on github from your fork's page. I should receive a notification and I will review your changes.
+### **⚡ Multi-threaded**
+Fractalistic leverages parallel processing for complex arithmetic operations, enabling smooth navigation and rapid rendering.
+### **🔢 High Precision Arithmetics**
+Using MPFR and GMPY2, Fractalistic allows you to explore fractals infinitely deep by enabling users to increase the decimal precision for calculations as needed.
+### **📸 High Quality Screenshots**
+Fractalistic not only allows you to explore fractals at terminal resolution but also lets you generate high-resolution captures of your current view.
+### **✨ Next-gen Terminal User Interface**
+Fractalistic utilizes modern libraries such as Will McGugan's Textual framework to provide a full-featured navigation experience, all this in your classic terminal. Fractalistic also supports customizable mouse inputs, allowing for seemless navigation.
+### **📌 Robust Command System**
+Fractalistic offers a robust command system that goes beyond simple fractal navigation. Additional features include capturing high-definition screenshots, adjusting render settings, modifying navigation preferences, changing colors, and much more.
+### **⚙️  Modular Rendering Engine**
+Fractalistic's underlying rendering engine is highly modular. The integrated command system enables you to inspect and modify technical parameters, allowing you to explore beyond the basic Mandelbrot and Julia sets. The combination of adjustable parameters makes the number of possible fractals effectively infinite.
 
 # Screenshots
 

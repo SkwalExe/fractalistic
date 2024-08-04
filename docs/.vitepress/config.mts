@@ -38,6 +38,15 @@ export default defineConfig({
                 items: [
                     { text: '💎 General Presentation', link: '/presentation' },
                 ]
+            },
+            {
+                text: 'Development',
+                items: [
+                    { text: '🫂 Contributing', link: '/contributing' },
+                    { text: '✅ Recommended IDE setup', link: '/recommended-ide-setup' },
+                    { text: '🏗️ Project setup', link: '/project-setup' },
+                    { text: '🩷 Creating a pull request', link: '/creating-a-pull-request' },
+                ]
             }
         ],
 
