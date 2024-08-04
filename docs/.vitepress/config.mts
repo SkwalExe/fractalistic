@@ -32,6 +32,12 @@ export default defineConfig({
                     { text: '📥 Getting Started', link: '/getting-started' },
                     { text: '🌟 Screenshots', link: '/screenshots' }
                 ]
+            },
+            {
+                text: 'Guides',
+                items: [
+                    { text: '💎 General Presentation', link: '/presentation' },
+                ]
             }
         ],
 
