@@ -8,6 +8,7 @@ export default defineConfig({
     srcDir: 'src',
     appearance: 'force-dark',
     themeConfig: {
+        siteTitle: "Fractalistic",
         // https://vitepress.dev/reference/default-theme-config
         nav: [
             { text: 'Home', link: '/' },
