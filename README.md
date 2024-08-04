@@ -40,7 +40,7 @@ Now start the program with:
 fractalistic
 ```
 
-> [!INFO]
+> [!NOTE]
 > If the command is not found after installtion, you must add  `~/.local/bin` to your path. You can do this by adding `export PATH=$PATH:~/.local/bin` to your `.bashrc` or `.zshrc` file and **opening a new shell session**.
 
 ```bash
