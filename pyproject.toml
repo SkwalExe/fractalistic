@@ -25,17 +25,11 @@ dependencies = [
 source = "file"
 path = "src/fractalistic/__init__.py"
 
-[project.urls]
-Repository = "https://github.com/SkwalExe/fractalistic"
-Changelog = "https://github.com/SkwalExe/fractalistic/blob/main/CHANGELOG.md"
-
-[project.scripts]
-fractalistic = "fractalistic.__main__:main"
-
 [tool.pdm.dev-dependencies]
 dev = [
     "ruff>=0.4.7",
     "pyright>=1.1.365",
+    "textual-dev>=1.5.1",
 ]
 
 [tool.pdm.scripts]
@@ -44,5 +38,13 @@ format-check = "ruff format --check"
 lint = "ruff check --fix --show-fixes"
 lint-check = "ruff check"
 check-types = "pyright"
-dev = "fractalistic"
+dev = "textual run --dev -c fractalistic"
+console = "textual console -x EVENT -x SYSTEM"
+
+[project.urls]
+Repository = "https://github.com/SkwalExe/fractalistic"
+Changelog = "https://github.com/SkwalExe/fractalistic/blob/main/CHANGELOG.md"
+
+[project.scripts]
+fractalistic = "fractalistic.__main__:main"
 
