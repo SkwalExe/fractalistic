@@ -22,7 +22,7 @@ rich_theme = Theme(
         "red": "#ff6767",
         "bg_red": "white on #ff6767",
         "green": "#58e0b2",
-        "bg_green": "black on #58e0b2"
+        "bg_green": "black on #58e0b2",
     }
 )
 

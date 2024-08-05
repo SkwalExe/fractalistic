@@ -753,9 +753,7 @@ class FractalisticApp(App[list[LogObj]]):
         self.log_write([f"[bg_acc] Info{f': {subject}' if subject is not None else ''} ", f"[acc]{message}"])
 
     def log_success(self, message: str, subject: str | None = None) -> None:
-        self.log_write(
-            [f"[bg_green] Success{f': {subject}' if subject is not None else ''} ", f"[green]{message}"]
-        )
+        self.log_write([f"[bg_green] Success{f': {subject}' if subject is not None else ''} ", f"[green]{message}"])
 
     def log_warning(self, message: str, subject: str | None = None) -> None:
         self.log_write(
