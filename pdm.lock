@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.2"
-content_hash = "sha256:cbb6fb3293aec67bea705585f410852c12c622c16a2f8de99538a8d9a622b61a"
+content_hash = "sha256:414bda4b96586ad893e5b883aba89217fe66158cdebd65479fb8cdc0aa63545d"
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -1144,7 +1144,6 @@ dependencies = [
     "colorama>=0.4.6; sys_platform == \"win32\"",
     "docutils<0.22,>=0.20",
     "imagesize>=1.3",
-    "importlib-metadata>=6.0; python_version < \"3.10\"",
     "packaging>=23.0",
     "requests>=2.30.0",
     "snowballstemmer>=2.2",

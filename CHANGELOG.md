@@ -1,3 +1,13 @@
+# 2.3.0 - 2024-08-05
+
+### Improved
+- Improved coloring of log messages
+
+### Added
+- Print logs history on exit to allow copying data from commands
+- Added navigation using VIM keys (hjlk) within the canvas
+
+
 # 2.2.0 - 2024-07-18
 
 ### Improved

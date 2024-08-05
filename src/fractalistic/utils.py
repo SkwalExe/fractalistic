@@ -3,6 +3,8 @@ from multiprocessing import Queue
 
 import gmpy2
 from gmpy2 import mpc, mpfr  # type: ignore
+from rich.rule import Rule
+from rich.theme import Theme
 
 from .colors import color_renderers
 from .fractals import fractal_list
@@ -11,6 +13,18 @@ from .settings import RenderSettings
 from .vec import Vec
 
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+
+rule = Rule(style="#666666", characters="-")
+rich_theme = Theme(
+    {
+        "acc": "#a277ff",
+        "bg_acc": "white on #a277ff",
+        "red": "#ff6767",
+        "bg_red": "white on #ff6767",
+        "green": "#58e0b2",
+        "bg_green": "black on #58e0b2",
+    }
+)
 
 
 def get_fractal_index_from_name(name: str) -> int | None:

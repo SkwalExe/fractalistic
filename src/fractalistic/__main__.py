@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+
 from click_extra import STRING, Choice, IntRange, extra_command, option
+from rich.console import Console
 
 from . import __version__
 from .app import FractalisticApp
 from .colors import color_renderers
 from .fractals import fractal_list
 from .settings import Settings
-from .utils import get_color_index_from_name, get_fractal_index_from_name
+from .utils import get_color_index_from_name, get_fractal_index_from_name, rich_theme, rule
 from .vec import Vec
 
 
@@ -110,4 +112,15 @@ def main(
     app.settings.threads = threads
     app.settings.screenshot_threads = screenshot_threads
 
-    app.run()
+    logs = app.run()
+    if logs is None:
+        print(logs)
+        quit(0)
+
+    console = Console(theme=rich_theme)
+    console.print("Logs history is presented below:")
+    for logobj in logs:
+        lines = [logobj] if not isinstance(logobj, list) else logobj
+        console.print(rule)
+        for line in lines:
+            console.print(line)
