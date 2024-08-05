@@ -15,7 +15,7 @@
 
 # Documentation ✨
 
-[**✨ --> Please head over to our documentation for more information! <-- ✨**](https://fractalistic.skwal.net)
+#### [**✨ ⟼  Please head over to our documentation for more information! ⟻  ✨**](https://fractalistic.skwal.net)
 
 # Fractalistic
 
@@ -25,30 +25,14 @@
 
 # How to install 📥
 
+#### [**✨ ⟼  For up-to-date instructions, please head over to our documentation ⟻  ✨**](https://fractalistic.skwal.net)
+
 You can install fractalistic easily with pip:
 ```bash
 pip install fractalistic
 ```
 
-If you want to install the application in an isolated environment, you can use [pipx](https://pypa.github.io/pipx/):
-```bash
-pipx install fractalistic
-```
-
-Now start the program with:
-```bash
-fractalistic
-```
-
-> [!NOTE]
-> If the command is not found after installtion, you must add  `~/.local/bin` to your path. You can do this by adding `export PATH=$PATH:~/.local/bin` to your `.bashrc` or `.zshrc` file and **opening a new shell session**.
-
-```bash
-# For bash
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc; bash
-# For zsh
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.zshrc; zsh
-```
+Now start the program with the `fractalistic` command.
 
 # Features 🌟
 
