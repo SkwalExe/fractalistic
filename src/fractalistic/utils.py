@@ -4,7 +4,7 @@ from multiprocessing import Queue
 import gmpy2
 from gmpy2 import mpc, mpfr  # type: ignore
 from rich.rule import Rule
-from rich.theme import Theme  # type: ignore
+from rich.theme import Theme
 
 from .colors import color_renderers
 from .fractals import fractal_list
