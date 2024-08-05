@@ -51,6 +51,7 @@ echo 'export PATH=$PATH:~/.local/bin' >> ~/.zshrc; zsh
 ```
 
 # Features 🌟
+
 ### **⚡ Multi-threaded**
 Fractalistic leverages parallel processing for complex arithmetic operations, enabling smooth navigation and rapid rendering.
 ### **🔢 High Precision Arithmetics**
@@ -64,29 +65,20 @@ Fractalistic offers a robust command system that goes beyond simple fractal navi
 ### **⚙️  Modular Rendering Engine**
 Fractalistic's underlying rendering engine is highly modular. The integrated command system enables you to inspect and modify technical parameters, allowing you to explore beyond the basic Mandelbrot and Julia sets. The combination of adjustable parameters makes the number of possible fractals effectively infinite.
 
-# Screenshots
+# Screenshots 🌟
+
+Here is some eye candy that I generated while creating this app!
+
+[💎 For more screenshots, visit the documentation!](https://fractalistic.skwal.net/screenshots.html)
+
 
 ![Screenshot 0](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot0.png)
 
 ![Screenshot 1](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot1.png)
 
-![Screenshot 3](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot3.png)
-
-![Screenshot 2](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot2.png)
-
 ![Screenshot 4](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot4.png)
 
-![Screenshot 5](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot5.png)
-
-![Screenshot 6](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot6.png)
-
-![Screenshot 7](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot7.png)
-
-![Screenshot 8](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot8.png)
-
 ![Screenshot 9](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot9.png)
-
-![Screenshot 10](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot10.png)
 
 ![Screenshot 11](https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/screenshot11.png)
 

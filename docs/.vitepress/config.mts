@@ -30,6 +30,7 @@ export default defineConfig({
                 text: 'Introduction',
                 items: [
                     { text: '📥 Getting Started', link: '/getting-started' },
+                    { text: '❗  Color Issues', link: '/color-issues' },
                     { text: '🌟 Screenshots', link: '/screenshots' }
                 ]
             },
