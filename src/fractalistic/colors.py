@@ -10,8 +10,6 @@ def get_intensity(i: int) -> int:
 # These colors are picked from UF6
 # https://www.ultrafractal.com/
 BLUE_BROWN = [
-    Color(69, 33, 19),
-    Color(28, 10, 29),
     Color(12, 4, 50),
     Color(7, 7, 76),
     Color(3, 10, 103),
@@ -26,6 +24,8 @@ BLUE_BROWN = [
     Color(207, 131, 3),
     Color(156, 90, 3),
     Color(109, 55, 6),
+    Color(69, 33, 19),
+    Color(28, 10, 29),
 ]
 
 
