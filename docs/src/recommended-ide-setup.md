@@ -3,7 +3,7 @@
 Writing code is good, but writing code with the assistance of autocomplete, 
 autoformatting, error notifications, and linting is even better. ✨
 
-![Example of type checking integration](./type-checking.png)
+![Example of type checking integration](./assets/type-checking.png)
 
 You are not required to use the tools mentioned below in your IDE. 
 However, keep in mind that once you finish your changes, 

@@ -30,4 +30,4 @@ The command input feature enables you to interact with the application, allowing
 
 Details on how to use the command system will be provided in a later section. If you are curious, you can run the `help` or `help +` commands to get an overview of the available commands!
 
-![help command](./help.png)
+![help command](./assets/help.png)
