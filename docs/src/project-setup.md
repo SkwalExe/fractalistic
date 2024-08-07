@@ -36,4 +36,4 @@ This will open the app in **dev mode**, allowing you to log messages
 to the **Textual console** (first terminal). To log messages within the code, 
 you must use the `textual.log()` function, and import it if needed. (`from textual import log`)
 
-![Dev mode preview](./devmode.png)
+![Dev mode preview](./assets/devmode.png)
