@@ -38,6 +38,9 @@ export default defineConfig({
                 text: 'Guides',
                 items: [
                     { text: '💎 General Presentation', link: '/presentation' },
+                    { text: '📜 The Logs Panel', link: '/the-logs-panel' },
+                    { text: '🛠️ The Command System', link: '/the-command-system' },
+                    { text: '🧭 Navigation', link: '/navigation' },
                 ]
             },
             {
