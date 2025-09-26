@@ -1,3 +1,13 @@
+# ⚠️ Deprecation notice ⚠️
+
+**Fractalistic has been rewritten entirely in Rust under the new name: Rsfrac.**
+**Please use this version for the latest features and bug fixes, as well as INCREDIBLY INCREASED PERFORMANCE**
+
+[**CLICK HERE TO OPEN THE NEW REPO**](https://github.com/SkwalExe/rsfrac)
+
+
+---
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/SkwalExe/fractalistic/main/assets/logo.png">
 </p>
